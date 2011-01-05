@@ -1,3 +1,7 @@
+##' exportPattern "^[^\\.]"
+NULL
+
+
 ##' Impute the Data Without Consideration of Conditions.
 ##' This function is to impute missing data by one of the eight
 ##' methods without the condition. When the condtions are imported,
