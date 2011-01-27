@@ -8,7 +8,9 @@
 ##'
 ##' See \code{\link{imputation}}.
 ##'
-##' @param dat A data frame whose missing values need to be imputed.
+##' @param dat A data frame whose missing values need to be
+##' imputed. The last column should be the row number passed by
+##' \code{\link{imputation}}.
 ##' @param method The imputation method selected from the missing data
 ##' GUI. Must be one of 'Below 10%','Median','Mean','Random
 ##' value','Regression','Nearest neighbor','Multiple
@@ -18,10 +20,14 @@
 ##' from "integer", "numeric", "factor", and "character".
 ##' @param cond A vector of categorical variables. There are no
 ##' missing values in those variables.
-##' @return The imputed data frame with missing shadow matrix.
+##' @return The imputed data frame with a column of row numbers
+##' matching with the last column of dat, to pass back to
+##' \code{\link{imputation}}.
 ##' @exportPattern "^[^\\.]"
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 singleimputation = function(dat, method, vartype, cond) {
+	row_number_2011 = dat[,ncol(dat)]
+	dat=dat[,-ncol(dat)]
 	dat=dat[,setdiff(colnames(dat),cond)]
 	if (is.vector(dat)) {n=1} else {n = ncol(dat)}
 	shadow = is.na(dat)
@@ -79,9 +85,9 @@ singleimputation = function(dat, method, vartype, cond) {
 		if (sum(complete.cases(dat))!=0) {
 			formula0 = as.formula(paste('~ ',paste(names(dat),collapse=' + ')))
 			f = aregImpute(formula0, data=dat)
-			res = f$imputed
-			for (i in 1:length(res)) {
-				dat[rownames(res[[i]]),names(res)[i]]=res[[i]][,1]
+			tmpres = f$imputed
+			for (i in 1:length(tmpres)) {
+				dat[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
 			}
 		}
 	}
@@ -155,7 +161,7 @@ singleimputation = function(dat, method, vartype, cond) {
 			}
 		}
 	}
-	return(data.frame(dat,shadow))
+	return(data.frame(dat,row_number=row_number_2011))
 }
 
 
@@ -201,7 +207,11 @@ singleimputation = function(dat, method, vartype, cond) {
 ##' imputation is implemented in each group. There are no missing
 ##' values in those variables. If it is null, then there is no
 ##' division. The imputation is based on the whole dataset.
-##' @return The imputed data frame with missing shadow matrix.
+##' @return The imputed data frame with the last column being the row
+##' number from the original dataset. During the procedure of the
+##' function, rows may be exchanged, thus a column of row number could
+##' keep track of the original row number and then help to find the
+##' shadow matrix.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 	n=length(vartype)
@@ -256,17 +266,14 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 					}
 				}
 				if (!is.null(dat)) {
-					Missing_any = factor(origshadow,levels=c(FALSE,TRUE))
-					res = data.frame(dat,origshadow,Missing_any)
+					res = data.frame(dat,row_number=1:nrow(origdata))
 				} else {res=NULL}
 			} else {
-				dat = ddply(origdata,condition,singleimputation,
-					method=method,vartype=vartype, cond=condition)
+				dat = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),
+					condition,singleimputation,method=method,vartype=vartype,
+					cond=condition)
 				if (!is.null(dat)) {
-					dat = dat[,2:3]
-					Missing_any = factor(dat[,2],
-						levels=c(FALSE,TRUE))
-					res = data.frame(dat,Missing_any)
+					res = dat[,(ncol(dat)-1):ncol(dat)]
 				} else {res = NULL}
 			}
 		}
@@ -337,9 +344,9 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 				} else {
 					formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
 					f = aregImpute(formula0, data=origdata)
-					res = f$imputed
-					for (i in 1:length(res)) {
-						dat[rownames(res[[i]]),names(res)[i]]=res[[i]][,1]
+					tmpres = f$imputed
+					for (i in 1:length(tmpres)) {
+						dat[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
 					}
 				}
 			}
@@ -386,15 +393,12 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 				}
 			}
 			if (!is.null(dat)) {
-				Missing_any = factor(apply(origshadow,1,any),levels=c(FALSE,TRUE))
-				res = data.frame(dat, origshadow ,Missing_any)
+				res = data.frame(dat, row_number=1:nrow(origdata))
 			} else {res = NULL}
 		} else {
-			dat = ddply(origdata,condition,singleimputation, method=method,vartype=vartype, cond=condition)
+			dat = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),condition,singleimputation, method=method,vartype=vartype, cond=condition)
 			if (!is.null(dat)) {
-				dat = dat[,(ncol(dat)-2*n+1):ncol(dat)]
-				Missing_any = factor(apply(dat[,(n+1):(2*n)],1,any),levels=c(FALSE,TRUE))
-				res = data.frame(dat,Missing_any)
+				res = dat[,(ncol(dat)-n):ncol(dat)]
 			} else {res = NULL}
 		}
 	}
@@ -577,7 +581,6 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     #####----------------------------#####
     Graph = function(h, ...) {
 		graphics.off()
-	#	glay15 = glayout(container = group15, expand = TRUE, use.scrollwindow = TRUE)
 
         name_select = svalue(gt11, index = TRUE)
 		imp_method = svalue(gr142)
@@ -585,11 +588,18 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 		n = length(name_select)
 		cond = check123[svalue(check123,index=T)]
 		if (length(cond)==0) cond = NULL
-		colorby = svalue(radio125)
+		if (imp_method=='Below 10%') cond = NULL
+		colorby = as.character(svalue(radio125))
 		if (length(colorby)==0) {
-			colorby = "Missing Any Variables Selected"
+			colorby = "Missing Any Variables"
 		} else {
-			colorby = as.character(colorby)
+			if ("Missing Any Variables" %in% colorby) {
+				colorby = "Missing Any Variables"
+			} else {
+				if ('Missing on Selected Variables' %in% colorby) {
+					colorby = 'Missing on Selected Variables'
+				}
+			}
 		}
 
         if (n == 0) {
@@ -604,13 +614,20 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 			missingpct=as.numeric(as.character(gt11[name_select,4])),
 			condition=cond)
 		dat = data.frame(dat)
-		colnames(dat)[1:(2*n)]=c(gt11[name_select,2],
-			paste('Missing', gt11[name_select,2], sep='_'))
-		if (colorby=='Missing Any Variables Selected') {
-			Missing <<- dat[,ncol(dat)]
-		} else {
-			Missing <<- is.na(dataset[,colorby])
+		colnames(dat)[1:n]=c(gt11[name_select,2])
+		for (i in 1:n){
+			eval(parse(text=paste("dat[,i]=as.",as.character(gt11[name_select,3])[i],"(as.character(dat[,i]))",sep="")))
 		}
+		if (colorby=='Missing on Selected Variables') {
+			Missing <<- !complete.cases(dataset[,gt11[name_select,2]])
+		} else {
+			if (colorby=='Missing Any Variables') {
+				Missing <<- !complete.cases(dataset)
+			} else {
+				Missing <<- !complete.cases(dataset[,colorby])
+			}
+		}
+		Missing <<- Missing[dat[,ncol(dat)]]
 
 		if (graphtype=="Histogram/Barchart") {
 			for (i in 1:n) {
@@ -634,6 +651,97 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 						fill=Missing, xlab=names(tmpdat)[i])+coord_flip())
 				}
 			}
+			# svalue(text16) = capture.output(cat("
+	# dat = imputation(origdata=dataset, method=imp_method,
+		# vartype=class(dataset), condition=cond,
+		# missingpct=sapply(dataset,function(x){sum(is.na(x))/length(x)}))
+	# colnames(dat)[1:(2*n)]=c(colnames(dataset),
+		# paste('Missing', colnames(dataset), sep='_'))
+	# if (colorby=='Missing on Selected Variables') {
+		# Missing = dat[,ncol(dat)]
+	# } else {
+		# if (colorby=='Missing Any Variables') {
+			# Missing = !complete.cases(dataset)
+		# } else {
+			# Missing = !complete.cases(dataset[,colorby])
+		# }
+	# }
+
+	# for (i in 1:n) {
+		# if (is.numeric(dat[,i])) {
+			# tmpdat = data.frame(dat,Missing=Missing)
+			# print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+				# fill=Missing, xlab=names(tmpdat)[i]))
+		# }
+		# if (is.character(dat[,i])) {
+			# tmpdat = data.frame(dat,Missing=Missing)
+			# print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+				# fill=Missing, xlab=names(tmpdat)[i])+coord_flip())
+		# }
+		# if (is.factor(dat[,i]) &
+		# as.numeric(as.character(gt11[name_select,4]))[i]<1) {
+			# tmpdat = data.frame(dat,Missing=Missing)
+			# print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+				# fill=Missing, xlab=names(tmpdat)[i])+coord_flip())
+		# }
+	# }
+			# "))
+		}
+		if (graphtype=="Spinogram/Spineplot") {
+			for (i in 1:n) {
+				glay15[i, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+				if (is.numeric(dat[,i])) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, position="fill", xlab=names(tmpdat)[i]))
+				}
+				if (is.character(dat[,i])) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, position="fill", xlab=names(tmpdat)[i])+coord_flip())
+				}
+				if (is.factor(dat[,i]) &
+				as.numeric(as.character(gt11[name_select,4]))[i]<1) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, position="fill", xlab=names(tmpdat)[i])+coord_flip())
+				}
+			}
+			# svalue(text16) = capture.output(cat("
+	# dat = imputation(origdata=dataset, method=imp_method,
+		# vartype=class(dataset), condition=cond,
+		# missingpct=sapply(dataset,function(x){sum(is.na(x))/length(x)}))
+	# colnames(dat)[1:(2*n)]=c(colnames(dataset),
+		# paste('Missing', colnames(dataset), sep='_'))
+	# if (colorby=='Missing on Selected Variables') {
+		# Missing = dat[,ncol(dat)]
+	# } else {
+		# if (colorby=='Missing Any Variables') {
+			# Missing = !complete.cases(dataset)
+		# } else {
+			# Missing = !complete.cases(dataset[,colorby])
+		# }
+	# }
+
+	# for (i in 1:n) {
+		# if (is.numeric(dat[,i])) {
+			# tmpdat = data.frame(dat,Missing=Missing)
+			# print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+				# fill=Missing, position='fill', xlab=names(tmpdat)[i]))
+		# }
+		# if (is.character(dat[,i])) {
+			# tmpdat = data.frame(dat,Missing=Missing)
+			# print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+				# fill=Missing, position='fill', xlab=names(tmpdat)[i])+coord_flip())
+		# }
+		# if (is.factor(dat[,i]) &
+		# as.numeric(as.character(gt11[name_select,4]))[i]<1) {
+			# tmpdat = data.frame(dat,Missing=Missing)
+			# print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+				# fill=Missing, position='fill', xlab=names(tmpdat)[i])+coord_flip())
+		# }
+	# }
+			# "))
 		}
 		if (graphtype=="Pairwise Plots") {
 			if (n > 5) {
@@ -645,7 +753,8 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 			}
 			glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
 			if (n==2) {
-				print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
+				print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
+					size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
 			} else {
 			print(ggpairs(dat[,1:n],
 				upper = "blank",
@@ -653,7 +762,36 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 					aes_string = aes_string(position="position_jitter(width=1)")),
 				diag = list(continuous = "bar", discrete = "bar"),
 				color="Missing", fill="Missing",alpha=I(0.5)) )
+			# ggpairs(iris,colour=species)
 			}
+			# svalue(text16) = capture.output(cat("
+	# dat = imputation(origdata=dataset, method=imp_method,
+		# vartype=class(dataset), condition=cond,
+		# missingpct=sapply(dataset,function(x){sum(is.na(x))/length(x)}))
+	# colnames(dat)[1:(2*n)]=c(colnames(dataset),
+		# paste('Missing', colnames(dataset), sep='_'))
+	# if (colorby=='Missing on Selected Variables') {
+		# Missing = dat[,ncol(dat)]
+	# } else {
+		# if (colorby=='Missing Any Variables') {
+			# Missing = !complete.cases(dataset)
+		# } else {
+			# Missing = !complete.cases(dataset[,colorby])
+		# }
+	# }
+
+	# if (n==2) {
+		# print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
+			# size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
+	# } else {
+		# print(ggpairs(dat[,1:n],
+			# upper = 'blank',
+			# lower = list(continuous = 'points', discrete = 'ratio',
+				# aes_string = aes_string(position='position_jitter(width=1)')),
+			# diag = list(continuous = 'bar', discrete = 'bar'),
+			# color='Missing', fill='Missing',alpha=I(0.5)) )
+	# }
+			# "))
 		}
 		if (graphtype=="Parallel Coordinates") {
 			if (n==1) {
@@ -669,6 +807,26 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 			glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
 			print(ggpcp(dat[,1:n])+geom_line(aes(colour=Missing))+
 				geom_point(subset=dat[Missing=='Missing',1:n],colour='blue'))
+
+			# svalue(text16) = capture.output(cat("
+	# dat = imputation(origdata=dataset, method=imp_method,
+		# vartype=class(dataset), condition=cond,
+		# missingpct=sapply(dataset,function(x){sum(is.na(x))/length(x)}))
+	# colnames(dat)[1:(2*n)]=c(colnames(dataset),
+		# paste('Missing', colnames(dataset), sep='_'))
+	# if (colorby=='Missing on Selected Variables') {
+		# Missing = dat[,ncol(dat)]
+	# } else {
+		# if (colorby=='Missing Any Variables') {
+			# Missing = !complete.cases(dataset)
+		# } else {
+			# Missing = !complete.cases(dataset[,colorby])
+		# }
+	# }
+
+	# print(ggpcp(dat[,1:n])+geom_line(aes(colour=Missing))+
+		# geom_point(subset=dat[Missing=='Missing',1:n],colour='blue'))
+			# "))
 		}
 
 	}
@@ -694,7 +852,8 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 			method=imp_method, vartype=as.character(gt11[name_select,3]),
 			missingpct=as.numeric(as.character(gt11[name_select,4])),
 			condition=cond)
-		dat = data.frame(dat)
+		dat = data.frame(dat[,-ncol(dat)],
+			is.na(dataset[dat[,ncol(dat)],gt11[name_select,2]]))
 		colnames(dat)[1:(2*n)]=c(gt11[name_select,2],
 			paste('Missing', gt11[name_select,2], sep='_'))
 
@@ -703,6 +862,149 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
             write.csv(dat[,1:(2*n)], file = ifelse(grepl("\\.csv$",gf),gsub('\\.csv$',filename,gf),paste(gf,filename,sep='')), row.names = FALSE)
             gmessage("The data are exported!")
         }
+
+	}
+
+	#####---------------------------------#####
+    ##  ExportData is the handler of gb148.  ##
+	##  (gbutton: Save the plot)             ##
+    #####---------------------------------#####
+	SavePlot = function(h,...){
+		name_select = svalue(gt11, index = TRUE)
+		imp_method = svalue(gr142)
+		graphtype = svalue(gr143)
+		n = length(name_select)
+		cond = check123[svalue(check123,index=T)]
+		if (length(cond)==0) cond = NULL
+		if (imp_method=='Below 10%') cond = NULL
+		colorby = as.character(svalue(radio125))
+		if (length(colorby)==0) {
+			colorby = "Missing Any Variables"
+		} else {
+			if ("Missing Any Variables" %in% colorby) {
+				colorby = "Missing Any Variables"
+			} else {
+				if ('Missing on Selected Variables' %in% colorby) {
+					colorby = 'Missing on Selected Variables'
+				}
+			}
+		}
+
+        if (n == 0) {
+            gmessage("Please select at least one variable!",
+				icon = "error")
+            return()
+        }
+
+		dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond)],
+			method=imp_method, vartype=as.character(gt11[name_select,3]),
+			missingpct=as.numeric(as.character(gt11[name_select,4])),
+			condition=cond)
+		dat = data.frame(dat)
+		colnames(dat)[1:n]=c(gt11[name_select,2])
+		for (i in 1:n){
+			eval(parse(text=paste("dat[,i]=as.",as.character(gt11[name_select,3])[i],"(as.character(dat[,i]))",sep="")))
+		}
+		if (colorby=='Missing on Selected Variables') {
+			Missing <<- !complete.cases(dataset[,gt11[name_select,2]])
+		} else {
+			if (colorby=='Missing Any Variables') {
+				Missing <<- !complete.cases(dataset)
+			} else {
+				Missing <<- !complete.cases(dataset[,colorby])
+			}
+		}
+		Missing <<- Missing[dat[,ncol(dat)]]
+
+		if (graphtype=="Histogram/Barchart") {
+			savename = gfile(type="save")
+			for (i in 1:n) {
+				png(filename = paste(savename,'_hist_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
+				if (is.numeric(dat[,i]) #&
+				#as.numeric(as.character(gt11[name_select,4]))[i]>0
+				) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, xlab=names(tmpdat)[i]))
+				}
+				if (is.character(dat[,i])) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, xlab=names(tmpdat)[i])+coord_flip())
+				}
+				if (is.factor(dat[,i]) &
+				as.numeric(as.character(gt11[name_select,4]))[i]<1) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, xlab=names(tmpdat)[i])+coord_flip())
+				}
+				dev.off()
+			}
+		}
+		if (graphtype=="Spinogram/Spineplot") {
+			savename = gfile(type="save")
+			for (i in 1:n) {
+				png(filename = paste(savename,'_spinogram_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
+				if (is.numeric(dat[,i])) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, position="fill", xlab=names(tmpdat)[i]))
+				}
+				if (is.character(dat[,i])) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, position="fill", xlab=names(tmpdat)[i])+coord_flip())
+				}
+				if (is.factor(dat[,i]) &
+				as.numeric(as.character(gt11[name_select,4]))[i]<1) {
+					tmpdat = data.frame(dat,Missing=Missing)
+					print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
+						fill=Missing, position="fill", xlab=names(tmpdat)[i])+coord_flip())
+				}
+				dev.off()
+			}
+		}
+		if (graphtype=="Pairwise Plots") {
+			if (n > 5) {
+				gmessage("You selected more than five variables!
+					Only the first five are displayed.",
+					icon = "warning")
+				name.select = name_select[1:5]
+				n = 5
+			}
+			savename = gfile(type="save")
+			png(filename = paste(savename,'_pairwise.png',sep=''), width = 2*n, height = 2*n, units = "in", res=90)
+			if (n==2) {
+				print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
+					size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
+			} else {
+			print(ggpairs(dat[,1:n],
+				upper = "blank",
+				lower = list(continuous = "points", discrete = "ratio",
+					aes_string = aes_string(position="position_jitter(width=1)")),
+				diag = list(continuous = "bar", discrete = "bar"),
+				color="Missing", fill="Missing",alpha=I(0.5)) )
+			# ggpairs(iris,colour=species)
+			}
+			dev.off()
+		}
+		if (graphtype=="Parallel Coordinates") {
+			if (n==1) {
+				gmessage('You only selected one variable.
+					Cannot plot the parallel coordinates.',
+					icon = "error")
+				return()
+			}
+			if (any(c('character','factor') %in% as.character(gt11[name_select,3]))){
+				gmessage('The parallel coordinates plot is only drawn for numeric variables. Please choose the variables again.', icon = "error")
+				return()
+			}
+			savename = gfile(type="save")
+			png(filename = paste(savename,'_pcp.png',sep=''),width = (n+2), height = 4, units = "in", res=90)
+			print(ggpcp(dat[,1:n])+geom_line(aes(colour=Missing))+
+				geom_point(subset=dat[Missing=='Missing',1:n],colour='blue'))
+			dev.off()
+		}
 
 	}
 
@@ -719,9 +1021,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     ##  (2) Numeric or graphic summary.                     ##
     ##  (3)                                                 ##
     #####------------------------------------------------#####
-    group11 = ggroup(cont = tab, label = "Summary", expand = T)
-    group12 = ggroup(container = group11, use.scrollwindow = TRUE,
-        horizontal = FALSE, expand = T)
+    group11 = ggroup(cont = tab, label = "Summary", expand = TRUE, horizontal = FALSE)
+	group1100 = ggroup(container = group11, expand = TRUE)
+    group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
+        horizontal = FALSE, expand = TRUE)
 
     nametable = data.frame(Items=1:length(vname), Variables=vname,
 		Class=dataclass, NApct=as.character(round(vNApct,3)))
@@ -736,13 +1039,14 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 		c('factor','logical','character')], container=group12, use.table=TRUE,
 		handler = Graph)
 
-    group13 = ggroup(horizontal = FALSE, container = group11,
+    group13 = ggroup(horizontal = FALSE, container = group1100,
         expand = TRUE)
 	group14 = ggroup(horizontal = TRUE, container = group13)
 
-	tmpcolorby = data.frame(`Color by the missing of`= c('Missing Any Variables Selected',nametable[vNApct>0,2]))
+	tmpcolorby = data.frame(`Color by the missing of`= c('Missing Any Variables',
+		'Missing on Selected Variables',nametable[vNApct>0,2]))
 	tmpcolorby[,1]=as.character(tmpcolorby[,1])
-	radio125 = gtable(tmpcolorby, container = group14,expand=TRUE)
+	radio125 = gtable(tmpcolorby, container=group14, expand=TRUE, multiple=TRUE)
 	addHandlerKeystroke(radio125, handler = function(h,...){})
 	gframe142 = gframe(text = "Imputation Method", container = group14)
 	gr142 = gradio(c('Below 10%','Median','Mean','Random value',
@@ -750,13 +1054,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 		container = gframe142, handler = function(h,...){
 			if (svalue(gr142)=='Below 10%') {
 				svalue(check123) = FALSE
-				enabled(check123) = FALSE
-			} else {
-				enabled(check123) = TRUE
 			}
 		})
 	gframe143 = gframe(text = "Graph Type", container = group14)
-	gr143 = gradio(c('Histogram/Barchart','Pairwise Plots',
+	gr143 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
 		'Parallel Coordinates'), container = gframe143)
 
 	group144 = ggroup(horizontal = FALSE, container = group14)
@@ -766,6 +1067,8 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         handler = Graph)
 	gb146 = gbutton('Export the data', container = group144,
         handler = ExportData)
+	gb148 = gbutton('Save the plot', container = group144,
+        handler = SavePlot)
 	gb147 = gbutton('Quit', container = group144,
         handler = function(h,...){
 			dispose(combo1)
@@ -775,12 +1078,16 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         expand = TRUE, use.scrollwindow = TRUE)
     glay15 = glayout(container = group15, expand = TRUE, use.scrollwindow = TRUE)
 
+	#group1101 = ggroup(cont = group11)
+	#text16 = gtext(text = NULL, height = 50, container = group1101, expand=TRUE)
+
 	#####------------------------------------------------#####
     ##  In the second tab we can:                           ##
     ##  Look at the help documents.  ##
     #####------------------------------------------------#####
-    group21 = ggroup(cont = tab, label = "Help", expand = T)
-    group22 = ggroup(container = group21, use.scrollwindow = TRUE,
+    group21 = ggroup(cont = tab, label = "Help", expand = TRUE, horizontal = FALSE)
+	group2100 = ggroup(container = group21, expand = TRUE)
+    group22 = ggroup(container = group2100, use.scrollwindow = TRUE,
         horizontal = FALSE, expand = T)
 
     gt21 = gtable(nametable, multiple = T, container = group22,
@@ -805,25 +1112,33 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 	Once we select one or more variables, the data
 	set will be divided into small groups based on
 	the selected categorical variable(s).\n
-	And the imputation will be made in each group."))
+	And the imputation will be made in each group.\n
+	If the imputation method is 'Below 10%', then
+	the selected conditioning variables are ignored."))
 	})
 
-    group23 = ggroup(horizontal = FALSE, container = group21,
+    group23 = ggroup(horizontal = FALSE, container = group2100,
         expand = TRUE)
 	group24 = ggroup(horizontal = TRUE, container = group23)
 
 	radio225 = gtable(data.frame(`Color by the missing of`=
-		c('Missing Any Variables Selected',nametable[vNApct>0,2])),
+		c('Missing Any Variables','Missing on Selected Variables',nametable[vNApct>0,2])),
 		container = group24, expand=TRUE, handler=function(h,...){
 		svalue(text25) = capture.output(cat("
 	This list displays all variables which have
 	missing values.\n
-	If we choose one of them, the color of the
+	If the user chooses one of them, the color of the
 	plot showing on the right will change based
 	on whether the cases being NA on that variable
 	or not.\n
-	The first row 'Missing Any Variables Selected' means
+	The user can also choose several variables. Then the
+	color of the plot will be based on whether the cases
+	have missing values on any of those variable.\n
+	The first row 'Missing Any Variables' means
 	whether this case being complete or not.\n
+	The first row 'Missing on Selected Variables' means
+	whether the cases have missing values on any of the
+	selected variable.\n
 	The widget allows text entry to find a particular
 	variable if the list is quite long."))
 	})
@@ -831,12 +1146,18 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 		svalue(text25) = capture.output(cat("
 	This list displays all variables which have
 	missing values.\n
-	If we choose one of them, the color of the
+	If the user chooses one of them, the color of the
 	plot showing on the right will change based
 	on whether the cases being NA on that variable
 	or not.\n
-	The first row 'Missing Any Variables Selected' means
+	The user can also choose several variables. Then the
+	color of the plot will be based on whether the cases
+	have missing values on any of those variable.\n
+	The first row 'Missing Any Variables' means
 	whether this case being complete or not.\n
+	The first row 'Missing on Selected Variables' means
+	whether the cases have missing values on any of the
+	selected variable.\n
 	The widget allows text entry to find a particular
 	variable if the list is quite long."))
 	})
@@ -850,7 +1171,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 	We can only select one of them.\n
 	(1)'Below 10%' means NA's of one variable will
 	be replaced by the value which equals to the
-	minimum of the variable minus 10% of the range.\n
+	minimum of the variable minus 10% of the range.
+	Under this status the selected conditioning
+	variables are ignored.\n
 	(2)'Median' means NA's will be replaced by the
 	median of this variable (omit NA's).\n
 	(3)'Mean' means NA's will be replaced by the
@@ -885,7 +1208,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 	We can only select one of them.\n
 	(1)'Below 10%' means NA's of one variable will
 	be replaced by the value which equals to the
-	minimum of the variable minus 10% of the range.\n
+	minimum of the variable minus 10% of the range.
+	Under this status the selected conditioning
+	variables are ignored.\n
 	(2)'Median' means NA's will be replaced by the
 	median of this variable (omit NA's).\n
 	(3)'Mean' means NA's will be replaced by the
@@ -916,28 +1241,40 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 	})
 
 	gframe243 = gframe(text = "Graph Type", container = group24)
-	gr243 = gradio(c('Histogram/Barchart','Pairwise Plots',
+	gr243 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
 		'Parallel Coordinates'), container = gframe243,
 		handler = function(h,...){
 		svalue(text25) = capture.output(cat("
 	This frame shows all plots we can make.\n
-	(1)'Histogram' will display histograms for each
-	variable selected.\n
-	(2)'Pairwise Scatterplots' displays n*(n-1)/2
-	scatterplots if we select n variables. It uses
-	function 'ggpairs' from package 'GGally'.\n
-	(3)'Parallel Coordinates' displays parallel
+	(1)'Histogram/Barchart' will display histograms
+	(numeric variables) and barcharts(categorical
+	variables) for each variable selected.\n
+	(2)'Spinogram/Spineplot' shows the spineplot
+	for each selected variable.\n
+	(3)'Pairwise Scatterplots' displays n*(n-1)/2
+	scatterplots if we select n variables. When n>5,
+	then only the first 5 variables are displayed.\n
+	When n=2, a scatterplot is drawn for the two
+	variables. When 2<n<=5, the function 'ggpairs'
+	from package 'GGally' is used.\n
+	(4)'Parallel Coordinates' displays parallel
 	coordinates plot for the selected variables."))
 	})
-	addHandlerMouseMotion(gframe243, handler = function(h,...){
+	addHandlerMouseMotion(gr243, handler = function(h,...){
 		svalue(text25) = capture.output(cat("
 	This frame shows all plots we can make.\n
-	(1)'Histogram' will display histograms for each
-	variable selected.\n
-	(2)'Pairwise Scatterplots' displays n*(n-1)/2
-	scatterplots if we select n variables. It uses
-	function 'ggpairs' from package 'GGally'.\n
-	(3)'Parallel Coordinates' displays parallel
+	(1)'Histogram/Barchart' will display histograms
+	(numeric variables) and barcharts(categorical
+	variables) for each variable selected.\n
+	(2)'Spinogram/Spineplot' shows the spineplot
+	for each selected variable.\n
+	(3)'Pairwise Scatterplots' displays n*(n-1)/2
+	scatterplots if we select n variables. When n>5,
+	then only the first 5 variables are displayed.\n
+	When n=2, a scatterplot is drawn for the two
+	variables. When 2<n<=5, the function 'ggpairs'
+	from package 'GGally' is used.\n
+	(4)'Parallel Coordinates' displays parallel
 	coordinates plot for the selected variables."))
 	})
 
@@ -947,39 +1284,96 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 			svalue(text25) = capture.output(cat("
 	Clicking this button will create another window
 	which presents the numeric summaries for missing
-	values."))
+	values.\n
+	In this summary window, the missing percentage
+	of all the numbers, variables, and cases are
+	presented. \n
+	Besides, there is a table of the missing levels.
+	The table has n+1 rows, where n = # of selected
+	variables. For each i in 0:n, the table gives
+	the count of cases which have i missing values,
+	as well as the percentage of those cases."))
 		})
 	addHandlerMouseMotion(gb245, handler = function(h,...){
 		svalue(text25) = capture.output(cat("
 	Clicking this button will create another window
 	which presents the numeric summaries for missing
-	values."))
+	values.\n
+	In this summary window, the missing percentage
+	of all the numbers, variables, and cases are
+	presented. \n
+	Besides, there is a table of the missing levels.
+	The table has n+1 rows, where n = # of selected
+	variables. For each i in 0:n, the table gives
+	the count of cases which have i missing values,
+	as well as the percentage of those cases."))
 	})
 
 	gb244 = gbutton("Plot", container = group244,
         handler = function(h,...){
 			svalue(text25) = capture.output(cat("
 	Clicking this button will draw a plot based on
-	the options you choose."))
+	the options the user chooses.\n
+	All the n variables the user selected should be
+	displayed, except that when the graph type is
+	'Pairwise Scatterplots' and n>5, then only the
+	first 5	variables are displayed."))
 		})
 	addHandlerMouseMotion(gb244, handler = function(h,...){
 		svalue(text25) = capture.output(cat("
 	Clicking this button will draw a plot based on
-	the options you choose."))
+	the options the user chooses.\n
+	All the n variables the user selected should be
+	displayed, except that when the graph type is
+	'Pairwise Scatterplots' and n>5, then only the
+	first 5	variables are displayed."))
 	})
 
 	gb246 = gbutton('Export the data', container = group244,
         handler = function(h,...){
 			svalue(text25) = capture.output(cat("
 	Clicking this button will export the imputed data
-	based on the options you choose."))
+	based on the options the user chooses.\n
+	A user can define the file name for the exported
+	data, and the imputation method will be suffixed
+	automatically.\n
+	In the exported csv file, there are 2*n columns
+	if the user selected n variables. The first n
+	columns are the imputed data, and the second n
+	columns are the 'shadow matrix' which indicate
+	whether the values are missing or not in the
+	original dataset."))
 		})
 	addHandlerMouseMotion(gb246, handler = function(h,...){
 		svalue(text25) = capture.output(cat("
 	Clicking this button will export the imputed data
-	based on the options you choose."))
+	based on the options the user chooses.\n
+	A user can define the file name for the exported
+	data, and the imputation method will be suffixed
+	automatically.\n
+	In the exported csv file, there are 2*n columns
+	if the user selected n variables. The first n
+	columns are the imputed data, and the second n
+	columns are the 'shadow matrix' which indicate
+	whether the values are missing or not in the
+	original dataset."))
 	})
 
+	gb248 = gbutton('Save the plot', container = group244,
+        handler = function(h,...){
+			svalue(text25) = capture.output(cat("
+	Clicking this button will save the plot(s) to png
+	file(s) based on the options the user chooses.\n
+	A user can define the file name for the plot, and
+	the graph type will be suffixed automatically."))
+		})
+	addHandlerMouseMotion(gb248, handler = function(h,...){
+		svalue(text25) = capture.output(cat("
+	Clicking this button will save the plot(s) to png
+	file(s) based on the options the user chooses.\n
+	A user can define the file name for the plot, and
+	the graph type will be suffixed automatically."))
+	})
 
 	gb247 = gbutton('Quit', container = group244,
         handler = function(h,...){
@@ -996,6 +1390,31 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         expand = TRUE, use.scrollwindow = TRUE)
     text25 = gtext(container = group25, expand = TRUE,
 		use.scrollwindow = TRUE, font.attr=c(family="monospace"))
+
+	# group2101 = ggroup(cont = group21)
+	# text26 = gtext(text = NULL, height = 50, container = group2101, expand=TRUE)
+	# addHandlerKeystroke(text26, handler = function(h,...){
+		# svalue(text25) = capture.output(cat("
+	# The code for the plots is texted here. Currently it
+	# cannot be executed directly. The user need to import
+	# the dataset and use the correct paramter to make a
+	# similar plot."))
+	# })
+	# addHandlerClicked(text26, handler = function(h,...){
+		# svalue(text25) = capture.output(cat("
+	# The code for the plots is texted here. Currently it
+	# cannot be executed directly. The user need to import
+	# the dataset and use the correct paramter to make a
+	# similar plot."))
+	# })
+	# addHandlerMouseMotion(text26, handler = function(h,...){
+		# svalue(text25) = capture.output(cat("
+	# The code for the plots is texted here. Currently it
+	# cannot be executed directly. The user need to import
+	# the dataset and use the correct paramter to make a
+	# similar plot."))
+	# })
+
 	svalue(tab)=1
 }
 
@@ -1037,7 +1456,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 ##' missingdataGUI(airquality)
 ##' }
 ##'
-missingdataGUI = function(data=NULL) {
+MissingDataGUI = function(data=NULL) {
     if (is.null(data)) {
         combo0 = gwindow("Open A File...", visible = TRUE)
         group = ggroup(horizontal = FALSE, container = combo0)
