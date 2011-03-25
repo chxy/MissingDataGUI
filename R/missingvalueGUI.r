@@ -102,8 +102,16 @@ singleimputation = function(dat, method, vartype, cond) {
 					NNdat = myNNdat
 					a = rbind(dat[i,], NNdat)[,usecol]
 					NNdat$distance = dist(a)[1:nrow(NNdat)]
-					NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),]
-					dat[,1:n][i,-usecol] = NNdat[,1:n][1,-usecol]
+					k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(5,nrow(NNdat)),]
+					if (nrow(k5NNdat)>1 & n-length(usecol)>1) {
+						dat[,1:n][i,-usecol] = apply(k5NNdat[,1:n][,-usecol],2,mean)
+					} else {
+						if (nrow(k5NNdat)==1) {
+							dat[,1:n][i,-usecol] = k5NNdat[,1:n][1,-usecol]
+						} else {
+							dat[,1:n][i,-usecol] = mean(k5NNdat[,1:n][,-usecol])
+						}
+					}
 				} else {
 					for (j in 1:n) {
 						dat[i,j] = median(dat[,j], na.rm=TRUE)
@@ -371,8 +379,16 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 								NNdat = myNNdat
 								a = rbind(dat[i,], NNdat)[,usecol]
 								NNdat$distance = dist(a)[1:nrow(NNdat)]
-								NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),]
-								dat[,1:n][i,-usecol] = NNdat[,1:n][1,-usecol]
+								k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(5,nrow(NNdat)),]
+								if (nrow(k5NNdat)>1 & n-length(usecol)>1) {
+									dat[,1:n][i,-usecol] = apply(k5NNdat[,1:n][,-usecol],2,mean)
+								} else {
+									if (nrow(k5NNdat)==1) {
+										dat[,1:n][i,-usecol] = k5NNdat[,1:n][1,-usecol]
+									} else {
+										dat[,1:n][i,-usecol] = mean(k5NNdat[,1:n][,-usecol])
+									}
+								}
 							} else {
 								for (j in 1:n) {
 									dat[i,j] = median(dat[,j], na.rm=TRUE)
@@ -1462,11 +1478,8 @@ MissingDataGUI = function(data=NULL) {
         group = ggroup(horizontal = FALSE, container = combo0)
         f.list = matrix(nrow = 0, ncol = 1, dimnames = list(NULL, "File"))
         gt = gtable(f.list, multiple = T, container = group, expand = T)
-        gb1 = gbutton("Open", container = group, handler = function(h,
-            ...) gt[,] = na.omit(rbind(gt[, , drop = FALSE], matrix(file.choose(),
-            dimnames = list(NULL, "File")))))
-        gb2 = gbutton("Watch Missing Values", container = group,
-			handler = function(h, ...) WatchMissingValues(h, data=NULL, gt=gt))
+		gb1 = gbutton("Open", container = group, handler = function(h,...) gt[,] = union(gt[,],na.omit(gfile(multiple=TRUE))))
+        gb2 = gbutton("Watch Missing Values", container = group,handler = function(h, ...) WatchMissingValues(h, data=NULL, gt=gt))
     } else {
         if (is.data.frame(data)) {
             WatchMissingValues(data=data)
