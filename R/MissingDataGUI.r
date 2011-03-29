@@ -455,17 +455,20 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 ##' selector allows text entry to find the variable when this widget
 ##' is active.
 ##' @param h A list with components obj referring to the button "Watch
-##' Missing Values" in \code{\link{missingdataGUI}}.
+##' Missing Values" in \code{\link{MissingDataGUI}}.
 ##' @param data A data frame which is shown in the missing-data
 ##' GUI. If it is null, then parameter gt must not be null.
 ##' @param gt A widget created by gtable(). It should be passed from
-##' \code{\link{missingdataGUI}}.
+##' \code{\link{MissingDataGUI}}.
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @examples
 ##' if(interactive()){
-##' WatchMissingValues(data=airquality)
+##' data(tao)
+##' WatchMissingValues(data=tao)
+##' data(brfss)
+##' WatchMissingValues(data=brfss)
 ##' }
 ##'
 WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
@@ -1468,8 +1471,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @examples
 ##' if (interactive()) {
-##' missingdataGUI()
-##' missingdataGUI(airquality)
+##' MissingDataGUI()
+##'
+##' data(tao)
+##' MissingDataGUI(tao)
+##'
+##' data(brfss)
+##' MissingDataGUI(brfss)
 ##' }
 ##'
 MissingDataGUI = function(data=NULL) {
@@ -1526,7 +1534,7 @@ MissingDataGUI = function(data=NULL) {
 ##' @examples
 ##' if (interactive()) {
 ##' data(tao)
-##' missingdataGUI(tao)
+##' MissingDataGUI(tao)
 ##' }
 ##'
 NULL
@@ -1669,7 +1677,7 @@ NULL
 ##' @examples
 ##' if (interactive()) {
 ##' data(brfss)
-##' missingdataGUI(brfss)
+##' MissingDataGUI(brfss)
 ##' }
 ##'
 NULL
