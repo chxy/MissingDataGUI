@@ -605,6 +605,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 		imp_method = svalue(gr142)
 		graphtype = svalue(gr143)
 		n = length(name_select)
+		Missing = rep(0, nrow(dataset))
 		cond = check123[svalue(check123,index=T)]
 		if (length(cond)==0) cond = NULL
 		if (imp_method=='Below 10%') cond = NULL
@@ -893,6 +894,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 		imp_method = svalue(gr142)
 		graphtype = svalue(gr143)
 		n = length(name_select)
+		Missing = rep(0, nrow(dataset))
 		cond = check123[svalue(check123,index=T)]
 		if (length(cond)==0) cond = NULL
 		if (imp_method=='Below 10%') cond = NULL
