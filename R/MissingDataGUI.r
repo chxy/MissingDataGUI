@@ -135,8 +135,8 @@ singleimputation = function(dat, method, vartype, cond) {
 		if (method == 'Below 10%') {
 			if (vartype %in% c('integer','numeric','logical') &
 			missingpct>0) {
-				dat[shadow] = min(origdata, na.rm=TRUE)*1.1-
-					max(origdata,na.rm=TRUE)/10
+				dat[shadow] = min(dat, na.rm=TRUE)*1.1-
+					max(dat,na.rm=TRUE)/10
 			}
 			if (vartype=='character') {
 				dat[shadow] = 'NAN'
