@@ -1,5 +1,6 @@
 
 ##' Impute the Data Without Consideration of Conditions.
+##'
 ##' This function is to impute missing data by one of the eight
 ##' methods without the condition. When the condtions are imported,
 ##' they are then romoved from the data frame, and then the imputation
@@ -175,6 +176,7 @@ singleimputation = function(dat, method, vartype, cond) {
 
 ##' Impute the missing data with the method selected under the
 ##' condition.
+##'
 ##' This function provides eight methods for imputation with
 ##' categorical varaibles as conditions.
 ##'
@@ -274,7 +276,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 					}
 				}
 				if (!is.null(dat)) {
-					res = data.frame(dat,row_number=1:nrow(origdata))
+					res = data.frame(dat,row_number=1:nrow(dat))
 				} else {res=NULL}
 			} else {
 				dat = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),
@@ -423,6 +425,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 
 
 ##' The Main Window of Missing Data GUI.
+##'
 ##' This function is to open the missing data GUI. The widgets shown
 ##' in the GUI include: a table of all variables in the dataset, a
 ##' checkbox group of categorical variables to condition on, a table
@@ -575,6 +578,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 				No_of_Case=No_of_Case,
 				Percent=round(No_of_Case/length(tmpdat)*100,1))
 		}
+		missingsummary = missingsummary[order(missingsummary$No_of_miss_by_case, decreasing=FALSE),]
 
 		NumSumforMisVal <- gwindow("Numeric Summary for Missing Values", visible = T, width = 350, height = 300, parent = combo1)
 		groupN1 = ggroup(cont = NumSumforMisVal, horizontal = FALSE, expand = TRUE)
@@ -628,7 +632,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         }
 
 
-		dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond)],
+		dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond),drop=FALSE],
 			method=imp_method, vartype=as.character(gt11[name_select,3]),
 			missingpct=as.numeric(as.character(gt11[name_select,4])),
 			condition=cond)
@@ -1324,6 +1328,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
 
 
 ##' The Starting of Missing Data GUI.
+##'
 ##' This function starts an open-files GUI, allowing 1) selecting one
 ##' or more data files; 2)opening the main missing-data GUI for one
 ##' data file. The missing data GUI consists of two tabs. In the
@@ -1385,6 +1390,7 @@ MissingDataGUI = function(data=NULL) {
 
 
 ##' West Pacific Tropical Atmosphere Ocean Data, 1993 & 1997.
+##'
 ##' Real-time data from moored ocean buoys for improved detection,
 ##' understanding and prediction of El Ni'o and La Ni'a.
 ##'
@@ -1427,6 +1433,7 @@ NULL
 
 ##' The Behavioral Risk Factor Surveillance System (BRFSS) Survey
 ##' Data, 2009.
+##'
 ##' The data is a subset of the 2009 survey from BRFSS, an ongoing
 ##' data collection program designed to measure behavioral risk
 ##' factors for the adult population (18 years of age or older) living
