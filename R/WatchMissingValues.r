@@ -311,7 +311,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     if (graphtype=="Missingness Map"){
       glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
       Mapdat=data.frame(is.na(dataset[,gt11[name_select,2]]))
-      Mapdat$observation=factor(1:nrow(Mapdat))
+      Mapdat$observation=1:nrow(Mapdat)
       mapdat=melt(Mapdat,"observation")
       colnames(mapdat)[3]="Missing"
       print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
@@ -499,7 +499,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       savename = gfile(type="save")
       png(filename = paste(savename,'_map.png',sep=''),width = 6, height = max(4,round(n/8)), units = "in", res=90)
       Mapdat=data.frame(is.na(dataset[,gt11[name_select,2]]))
-      Mapdat$observation=factor(1:nrow(Mapdat))
+      Mapdat$observation=1:nrow(Mapdat)
       mapdat=melt(Mapdat,"observation")
       colnames(mapdat)[3]="Missing"
       print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
