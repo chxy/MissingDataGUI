@@ -1,8 +1,8 @@
 Package: MissingDataGUI
 Type: Package
 Title: A GUI for Missing Data Exploration
-Version: 0.1-2
-Date: 2011-08-04
+Version: 0.1-3
+Date: 2012-03-01
 Author: Xiaoyue Cheng, Dianne Cook, Heike Hofmann
 Maintainer: Xiaoyue Cheng <xycheng@iastate.edu>
 Description: This package provides numeric and graphical
@@ -20,5 +20,9 @@ Depends:
     norm
 License: GPL
 Collate:
+    'MissingDataGUI-package.r'
     'MissingDataGUI.r'
+    'WatchMissingValues.r'
+    'imputation.r'
+    'SingleImputation.r'
     'zzz.r'
