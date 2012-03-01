@@ -308,6 +308,14 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       dat$Missing=Missing
       print(ggpcp(dat,vars=names(dat)[1:n])+geom_line(aes(colour=Missing)))
     }
+    if (graphtype=="Missingness Map"){
+      glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+      Mapdat=data.frame(is.na(dataset[,gt11[name_select,2]]))
+      Mapdat$observation=factor(1:nrow(Mapdat))
+      mapdat=melt(Mapdat,"observation")
+      colnames(mapdat)[3]="Missing"
+      print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
+    }
     
   }
   
@@ -487,6 +495,16 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       #	+ geom_point(subset=dat[Missing,1:n],colour='blue'))
       dev.off()
     }
+    if (graphtype=="Missingness Map"){
+      savename = gfile(type="save")
+      png(filename = paste(savename,'_map.png',sep=''),width = 6, height = max(4,round(n/8)), units = "in", res=90)
+      Mapdat=data.frame(is.na(dataset[,gt11[name_select,2]]))
+      Mapdat$observation=factor(1:nrow(Mapdat))
+      mapdat=melt(Mapdat,"observation")
+      colnames(mapdat)[3]="Missing"
+      print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
+      dev.off()
+    }
     
   }
   
@@ -501,7 +519,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ##  In the first tab we can:                            ##
   ##  (1) Watch and change the name or type of variables. ##
   ##  (2) Numeric or graphic summary.                     ##
-  ##  (3)                                                 ##
+  ##  (3) Save the imputation and plots.                  ##
   #####------------------------------------------------#####
   group11 = ggroup(cont = tab, label = "Summary", expand = TRUE, horizontal = FALSE)
   group1100 = ggroup(container = group11, expand = TRUE)
@@ -540,7 +558,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                  })
   gframe143 = gframe(text = "Graph Type", container = group14)
   gr143 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
-                   'Parallel Coordinates'), container = gframe143)
+                   'Parallel Coordinates','Missingness Map'), container = gframe143)
   
   group144 = ggroup(horizontal = FALSE, container = group14)
   gb145 = gbutton('Numeric summary', container = group144,
@@ -724,7 +742,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   
   gframe243 = gframe(text = "Graph Type", container = group24)
   gr243 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
-                   'Parallel Coordinates'), container = gframe243,
+                   'Parallel Coordinates','Missingness Map'), container = gframe243,
                  handler = function(h,...){
                    if (exists('text25')) svalue(text25) = capture.output(cat("
 	This frame shows all plots we can make.\n
@@ -740,7 +758,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                                                                              variables. When 2<n<=5, the function 'ggpairs'
                                                                              from package 'GGally' is used.\n
                                                                              (4)'Parallel Coordinates' displays parallel
-                                                                             coordinates plot for the selected variables."))
+                                                                             coordinates plot for the selected variables.\n
+                                                                             (5)'Missingness Map' shows the positions of missing
+                                                                             values in all the observations from the variable 
+                                                                             selected, regardless the imputation."))
 	})
   addHandlerMouseMotion(gr243, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("
@@ -757,7 +778,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                                                               variables. When 2<n<=5, the function 'ggpairs'
                                                               from package 'GGally' is used.\n
                                                               (4)'Parallel Coordinates' displays parallel
-                                                              coordinates plot for the selected variables."))
+                                                              coordinates plot for the selected variables.\n
+                                                              (5)'Missingness Map' shows the positions of missing
+                                                              values in all the observations from the variable 
+                                                              selected, regardless the imputation."))
 	})
   
   group244 = ggroup(horizontal = FALSE, container = group24)
