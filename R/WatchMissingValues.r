@@ -314,7 +314,19 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       Mapdat$observation=1:nrow(Mapdat)
       mapdat=melt(Mapdat,"observation")
       colnames(mapdat)[3]="Missing"
+      mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
+                             labels=rev(levels(mapdat$variable)))
       print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
+      
+      glay15[2, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+      Mapdat=Mapdat[order(rowSums(Mapdat[,-(n+1)]),decreasing=TRUE),]
+      Mapdat=Mapdat[,order(colSums(Mapdat),decreasing=TRUE)]
+      Mapdat$Reordered_Observation=1:nrow(Mapdat)
+      mapdat=melt(Mapdat[,-1],"Reordered_Observation")
+      colnames(mapdat)[3]="Missing"
+      mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
+                             labels=rev(levels(mapdat$variable)))
+      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing))
     }
     
   }
