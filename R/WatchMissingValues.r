@@ -319,10 +319,24 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
       
       glay15[2, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-      Mapdat=Mapdat[order(rowSums(Mapdat[,-(n+1)]),decreasing=TRUE),]
-      Mapdat=Mapdat[,order(colSums(Mapdat),decreasing=TRUE)]
-      Mapdat$Reordered_Observation=1:nrow(Mapdat)
-      mapdat=melt(Mapdat[,-1],"Reordered_Observation")
+      Mapdat2=Mapdat[order(rowSums(Mapdat[,-(n+1)]),decreasing=TRUE),]
+      Mapdat2=Mapdat2[,order(colSums(Mapdat2),decreasing=TRUE)]
+      Mapdat2$Reordered_Observation=1:nrow(Mapdat2)
+      mapdat=melt(Mapdat2[,-1],"Reordered_Observation")
+      colnames(mapdat)[3]="Missing"
+      mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
+                             labels=rev(levels(mapdat$variable)))
+      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing))
+      
+      glay15[3, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+      dist31=dist(Mapdat[,-(n+1)])
+      order31=hclust(dist31,"ward")$order
+      Mapdat3=Mapdat[order31,-(n+1)]
+      dist32=dist(t(Mapdat[,-(n+1)]))
+      order32=hclust(dist32,"ward")$order
+      Mapdat3=Mapdat3[,order32]
+      Mapdat3$Reordered_Observation=1:nrow(Mapdat3)
+      mapdat=melt(Mapdat3[,],"Reordered_Observation")
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
@@ -509,13 +523,40 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     }
     if (graphtype=="Missingness Map"){
       savename = gfile(type="save")
-      png(filename = paste(savename,'_map.png',sep=''),width = 6, height = max(4,round(n/8)), units = "in", res=90)
+      png(filename = paste(savename,'_map_1.png',sep=''),width = 6, height = max(4,round(n/8)), units = "in", res=90)
       Mapdat=data.frame(is.na(dataset[,gt11[name_select,2]]))
       Mapdat$observation=1:nrow(Mapdat)
       mapdat=melt(Mapdat,"observation")
       colnames(mapdat)[3]="Missing"
       print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
       dev.off()
+
+      png(filename = paste(savename,'_map_2.png',sep=''),width = 6, height = max(4,round(n/8)), units = "in", res=90)
+      Mapdat2=Mapdat[order(rowSums(Mapdat[,-(n+1)]),decreasing=TRUE),]
+      Mapdat2=Mapdat2[,order(colSums(Mapdat2),decreasing=TRUE)]
+      Mapdat2$Reordered_Observation=1:nrow(Mapdat2)
+      mapdat=melt(Mapdat2[,-1],"Reordered_Observation")
+      colnames(mapdat)[3]="Missing"
+      mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
+                             labels=rev(levels(mapdat$variable)))
+      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing))
+      dev.off()
+      
+      png(filename = paste(savename,'_map_3.png',sep=''),width = 6, height = max(4,round(n/8)), units = "in", res=90)
+      dist31=dist(Mapdat[,-(n+1)])
+      order31=hclust(dist31,"ward")$order
+      Mapdat3=Mapdat[order31,-(n+1)]
+      dist32=dist(t(Mapdat[,-(n+1)]))
+      order32=hclust(dist32,"ward")$order
+      Mapdat3=Mapdat3[,order32]
+      Mapdat3$Reordered_Observation=1:nrow(Mapdat3)
+      mapdat=melt(Mapdat3[,],"Reordered_Observation")
+      colnames(mapdat)[3]="Missing"
+      mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
+                             labels=rev(levels(mapdat$variable)))
+      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing))
+      dev.off()
+
     }
     
   }
