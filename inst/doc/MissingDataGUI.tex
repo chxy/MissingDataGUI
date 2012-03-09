@@ -201,6 +201,8 @@ It is also possible to read from a file.  If the \texttt{MissingDataGUI()} is ca
 
 Two data sets are provided with the package, \texttt{tao}, used in the Example section, and \texttt{brfss}. The latter data set is a subset of the 2009 survey from the Behavioral Risk Factor Surveillance System (BRFSS), an ongoing data collection program designed to measure behavioral risk factors for the adult population (18 years of age or older) living in households. The website for this program is \url{http://www.cdc.gov/BRFSS/index.htm}.
 
+If other methods of imputation are preferred to the data, it is possible to load the imputed data into the GUI directly. To label the imputed values, a shadow matrix is required in the data. Hence the imported structure should be a data frame or a ``comma separated value'' file with first n columns being the imputed data and the next n columns being the shadow matrix.
+
 
 \begin{center}
 %
