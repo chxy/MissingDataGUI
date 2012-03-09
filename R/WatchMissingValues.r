@@ -53,6 +53,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     gmessage("There's no input.", icon="error")
     return()
   }
+  
   if (is.null(data)) {
     if (length(svalue(gt)) == 0) {
       gtfile = gt[1,]
@@ -63,15 +64,43 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   } else {
     dataset = data
   }
+  
   rows = nrow(dataset)
+  cols = ncol(dataset)
+  halfcol = as.integer(cols/2)
+  dataclass = as.character(sapply(dataset, class))
+  vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
+  
+  if (sum(vNApct)==0) {
+    if (cols%%2==0) {
+      chr_shadowmatrix = unlist(sapply(dataset[,(halfcol+1):cols],as.character))
+      if (all(dataclass[(halfcol+1):cols]=="logical") | 
+        all(chr_shadowmatrix %in% c("TRUE","FALSE")) | 
+        all(chr_shadowmatrix %in% c("0","1"))) {
+        imp_dat = data.frame(dataset[,1:halfcol],row_number=1:rows)
+        tmp = dataset[,1:halfcol]
+        tmp[sapply(dataset[,(halfcol+1):cols],as.logical)] = NA
+        dataset = tmp
+        is_imputed_data = TRUE
+        gmessage(paste('There are no missing values in this data set. The last', halfcol, 
+                       'columns are used as the shadow matrix.'), icon = "info")
+      } else {
+        is_imputed_data = FALSE
+        gmessage('There are no missing values in this data set. If the data is combined 
+                  with a shadow matrix, then the number of columns of the shadow matrix
+                  is not the same as original data.', icon = "error")
+      }
+    } else {
+      is_imputed_data = FALSE
+      gmessage('There are no missing values in this data set. If the data is combined 
+                with a shadow matrix, then the number of columns of the shadow matrix
+                is not the same as original data.', icon = "error")
+    }
+  }
   vname = as.character(names(dataset))
   dataclass = as.character(sapply(dataset, class))
   NAcol = which(sapply(dataset, function(avec){all(is.na(avec))}))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
-  if (sum(vNApct)==0) {
-    gmessage('There are no missing values in this data set...',
-             icon = "error")
-  }
   
   #####------------------------------------------------------#####
   ##  VariableOptions is the handler when double clicking gt4.  ##
@@ -176,7 +205,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ##  Graph is the handler of gb144.  ##
   ##  (gbutton: Watch the data)       ##
   #####----------------------------#####
-  Graph = function(h, ...) {
+  Graph = function(h,...) {
     graphics.off()
     
     name_select = svalue(gt11, index = TRUE)
@@ -205,13 +234,16 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       return()
     }
     
-    
-    dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond),drop=FALSE],
-                     method=imp_method, vartype=as.character(gt11[name_select,3]),
-                     missingpct=as.numeric(as.character(gt11[name_select,4])),
-                     condition=cond)
-    dat = data.frame(dat)
-    colnames(dat)[1:n]=c(gt11[name_select,2])
+    if (!exists('imp_dat')) {
+      dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond),drop=FALSE],
+                       method=imp_method, vartype=as.character(gt11[name_select,3]),
+                       missingpct=as.numeric(as.character(gt11[name_select,4])),
+                       condition=cond)
+      dat = data.frame(dat)
+      colnames(dat)[1:n]=c(gt11[name_select,2])
+    } else {
+      dat = data.frame(imp_dat[,c(gt11[name_select,2])],imp_dat[,ncol(imp_dat)])
+    }
     for (i in 1:n){
       eval(parse(text=paste("dat[,i]=as.",as.character(gt11[name_select,3])[i],"(as.character(dat[,i]))",sep="")))
     }
@@ -362,14 +394,18 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       return()
     }
     
-    dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond)],
-                     method=imp_method, vartype=as.character(gt11[name_select,3]),
-                     missingpct=as.numeric(as.character(gt11[name_select,4])),
-                     condition=cond)
-    dat = data.frame(dat[,-ncol(dat)],
-                     is.na(dataset[dat[,ncol(dat)],gt11[name_select,2]]))
-    colnames(dat)[1:(2*n)]=c(gt11[name_select,2],
-                             paste('Missing', gt11[name_select,2], sep='_'))
+    if (!exists('imp_dat')) {
+      dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond)],
+                       method=imp_method, vartype=as.character(gt11[name_select,3]),
+                       missingpct=as.numeric(as.character(gt11[name_select,4])),
+                       condition=cond)
+      dat = data.frame(dat[,-ncol(dat)],
+                       is.na(dataset[dat[,ncol(dat)],gt11[name_select,2]]))
+      colnames(dat)[1:(2*n)]=c(gt11[name_select,2],
+                               paste('Missing', gt11[name_select,2], sep='_'))
+    } else {
+      dat = imp_dat
+    }
     
     if (!is.na(gf <- gfile(type = "save"))) {
       filename = paste('_impute_',gsub('[^a-z,A-Z,0-9]',"",imp_method),".csv",sep='')
@@ -410,12 +446,17 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       return()
     }
     
-    dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond)],
-                     method=imp_method, vartype=as.character(gt11[name_select,3]),
-                     missingpct=as.numeric(as.character(gt11[name_select,4])),
-                     condition=cond)
-    dat = data.frame(dat)
-    colnames(dat)[1:n]=c(gt11[name_select,2])
+    if (!exists('imp_dat')) {
+      dat = imputation(origdata=dataset[,c(gt11[name_select,2],cond)],
+                       method=imp_method, vartype=as.character(gt11[name_select,3]),
+                       missingpct=as.numeric(as.character(gt11[name_select,4])),
+                       condition=cond)
+      dat = data.frame(dat)
+      colnames(dat)[1:n]=c(gt11[name_select,2])
+    } else {
+      dat = data.frame(imp_dat[,c(gt11[name_select,2])],imp_dat[,ncol(imp_dat)])
+    }
+    
     for (i in 1:n){
       eval(parse(text=paste("dat[,i]=as.",as.character(gt11[name_select,3])[i],"(as.character(dat[,i]))",sep="")))
     }
@@ -609,6 +650,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                      svalue(check123) = FALSE
                    }
                  })
+  if (is_imputed_data) {enabled(gr142) = FALSE}
   gframe143 = gframe(text = "Graph Type", container = group14)
   gr143 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
                    'Parallel Coordinates','Missingness Map'), container = gframe143)
@@ -721,7 +763,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                  container = gframe242, handler = function(h,...){
                    if (exists('text25')) svalue(text25) = capture.output(cat("
 	This list displays all the imputation methods.\n
-                                                                             We can only select one of them.\n
+                                                                             Users can select one of them if the data are not already imputed.\n
                                                                              (1)'Below 10%' means NA's of one variable will
 	be replaced by the value which equals to the
                                                                              minimum of the variable minus 10% of the range.
