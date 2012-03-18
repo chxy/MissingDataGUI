@@ -40,6 +40,9 @@
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @importFrom reshape2 melt
+##' @importFrom reshape add.all.combinations
+##' @importFrom grid viewport
 ##' @examples
 ##' if(interactive()){
 ##' data(tao)
@@ -96,12 +99,12 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                 with a shadow matrix, then the number of columns of the shadow matrix
                 is not the same as original data.', icon = "error")
     }
-  }
+  } else {is_imputed_data = FALSE}
   vname = as.character(names(dataset))
   dataclass = as.character(sapply(dataset, class))
   NAcol = which(sapply(dataset, function(avec){all(is.na(avec))}))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
-  
+
   #####------------------------------------------------------#####
   ##  VariableOptions is the handler when double clicking gt4.  ##
   ##  It gives a new window for                                 ##
@@ -317,11 +320,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       } else {
         dat$Missings=factor(Missing)
         print(ggpairs(dat,columns=1:n,
-                      upper = "blank",
-                      lower = list(continuous = "points", discrete = "ratio",
-                                   aes_string = aes_string(position="position_jitter(width=1)")),
+                      upper = list(continuous = "points", combo = "dot", discrete = "ratio"),
+                      lower = list(continuous = "points", combo = "dot", discrete = "ratio"),
                       diag = list(continuous = "bar", discrete = "bar"),
-                      color="Missings", fill="Missings",alpha=I(0.5)) )
+                      color="Missings", fill="Missings",alpha=I(0.5),
+                      axisLabels = "none") )
         # ggpairs(iris,colour=species)
       }
     }
@@ -534,13 +537,12 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                     size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
       } else {
         dat$Missings=factor(Missing)
-        print(ggpairs(dat,columns=1:n,
-                      upper = "blank",
-                      lower = list(continuous = "points", discrete = "ratio",
-                                   aes_string = aes_string(position="position_jitter(width=1)")),
+		print(ggpairs(dat,columns=1:n,
+                      upper = list(continuous = "points", combo = "dot", discrete = "ratio"),
+                      lower = list(continuous = "points", combo = "dot", discrete = "ratio"),
                       diag = list(continuous = "bar", discrete = "bar"),
-                      color="Missings", fill="Missings",alpha=I(0.5)) )
-        # ggpairs(iris,colour=species)
+                      color="Missings", fill="Missings",alpha=I(0.5),
+                      axisLabels = "none"))
       }
       dev.off()
     }

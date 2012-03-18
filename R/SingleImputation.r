@@ -23,7 +23,6 @@
 ##' @return The imputed data frame with a column of row numbers
 ##' matching with the last column of dat, to pass back to
 ##' \code{\link{imputation}}.
-##' @exportPattern "^[^\\.]"
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 singleimputation = function(dat, method, vartype, cond) {
   row_number_2011 = dat[,ncol(dat)]

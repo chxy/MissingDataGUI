@@ -47,6 +47,7 @@
 ##' keep track of the original row number and then help to find the
 ##' shadow matrix.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @importFrom plyr ddply
 imputation = function(origdata, method, vartype, missingpct, condition=NULL){
   n=length(vartype)
   dat = origdata
