@@ -97,7 +97,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
 							icon = "warning")
             dat = NULL
           } else {
-            dat[origshadow] = names(sort(table(na.omit(dat)),dec=TRUE))[1]
+            dat[origshadow] = names(sort(table(na.omit(dat)),decreasing=TRUE))[1]
           }
         }
         if (!is.null(dat)) {
@@ -231,7 +231,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
           dat = NULL
         } else {
           for (i in 1:n) {
-            dat[origshadow[,i],i] = names(sort(table(na.omit(dat[,i])),dec=TRUE))[1]
+            dat[origshadow[,i],i] = names(sort(table(na.omit(dat[,i])),decreasing=TRUE))[1]
           }
         }
       }

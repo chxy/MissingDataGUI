@@ -125,7 +125,7 @@ singleimputation = function(dat, method, vartype, cond) {
                  icon = "warning")
       } else {
         for (i in 1:n) {
-          dat[shadow[,i],i] = names(sort(table(na.omit(dat[,i])),dec=TRUE))[1]
+          dat[shadow[,i],i] = names(sort(table(na.omit(dat[,i])),decreasing=TRUE))[1]
         }
       }
     }
@@ -164,7 +164,7 @@ singleimputation = function(dat, method, vartype, cond) {
                  icon = "warning")
         dat = NULL
       } else {
-        dat[shadow] = names(sort(table(na.omit(dat)),dec=TRUE))[1]
+        dat[shadow] = names(sort(table(na.omit(dat)),decreasing=TRUE))[1]
       }
     }
   }

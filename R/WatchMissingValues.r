@@ -63,7 +63,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     } else {
       gtfile = svalue(gt)[1]
     }
-    dataset = read.csv(file = gtfile, head = TRUE)
+    dataset = read.csv(file = gtfile, header = TRUE)
   } else {
     dataset = data
   }
@@ -187,21 +187,21 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     missingsummary = missingsummary[order(missingsummary$No_of_miss_by_case, decreasing=FALSE),]
     
     NumSumforMisVal <- gwindow("Numeric Summary for Missing Values", visible = T, width = 350, height = 300, parent = combo1)
-    groupN1 = ggroup(cont = NumSumforMisVal, horizontal = FALSE, expand = TRUE)
-    labelN11 = glabel('Missing:', cont=groupN1, pos=0)
+    groupN1 = ggroup(container = NumSumforMisVal, horizontal = FALSE, expand = TRUE)
+    labelN11 = glabel('Missing:', container=groupN1, pos=0)
     labelN12 = glabel(paste("    ",round(totalmissingpct*100,2),
-                            "% of the numbers",sep=""), cont=groupN1)
+                            "% of the numbers",sep=""), container=groupN1)
     labelN13 = glabel(paste("    ",round(varmissingpct*100,2),
-                            "% of variables",sep=""), cont=groupN1)
+                            "% of variables",sep=""), container=groupN1)
     labelN14 = glabel(paste("    ",round(casemissingpct*100,2),
-                            "% of samples",sep=""), cont=groupN1)
+                            "% of samples",sep=""), container=groupN1)
     
     groupN15= ggroup(container = groupN1, use.scrollwindow = TRUE,
                      horizontal = FALSE, expand = TRUE)
     missingsummary$No_of_miss_by_case = as.integer(missingsummary$No_of_miss_by_case)
     missingsummary$No_of_Case = as.integer(missingsummary$No_of_Case)
     missingsummary$Percent = as.character(missingsummary$Percent)
-    tableN15 = gtable(missingsummary, cont=groupN15, expand = TRUE)
+    tableN15 = gtable(missingsummary, container=groupN15, expand = TRUE)
   }
   
   #####----------------------------#####
@@ -617,7 +617,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ##  (2) Numeric or graphic summary.                     ##
   ##  (3) Save the imputation and plots.                  ##
   #####------------------------------------------------#####
-  group11 = ggroup(cont = tab, label = "Summary", expand = TRUE, horizontal = FALSE)
+  group11 = ggroup(container = tab, label = "Summary", expand = TRUE, horizontal = FALSE)
   group1100 = ggroup(container = group11, expand = TRUE)
   group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = TRUE)
@@ -675,14 +675,14 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                    expand = TRUE, use.scrollwindow = TRUE)
   glay15 = glayout(container = group15, expand = TRUE, use.scrollwindow = TRUE)
   
-  #group1101 = ggroup(cont = group11)
+  #group1101 = ggroup(container = group11)
   #text16 = gtext(text = NULL, height = 50, container = group1101, expand=TRUE)
   
   #####------------------------------------------------#####
   ##  In the second tab we can:                           ##
   ##  Look at the help documents.  ##
   #####------------------------------------------------#####
-  group21 = ggroup(cont = tab, label = "Help", expand = TRUE, horizontal = FALSE)
+  group21 = ggroup(container = tab, label = "Help", expand = TRUE, horizontal = FALSE)
   group2100 = ggroup(container = group21, expand = TRUE)
   group22 = ggroup(container = group2100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = T)
