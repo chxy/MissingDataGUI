@@ -319,13 +319,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                     size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
       } else {
         dat$Missings=factor(Missing)
-        print(ggpairs(dat,columns=1:n,
-                      upper = list(continuous = "points", combo = "dot", discrete = "ratio"),
-                      lower = list(continuous = "points", combo = "dot", discrete = "ratio"),
-                      diag = list(continuous = "bar", discrete = "bar"),
-                      color="Missings", fill="Missings",alpha=I(0.5),
-                      axisLabels = "none") )
-        # ggpairs(iris,colour=species)
+        #print(ggpairs(dat,columns=1:n,
+        #              upper = list(continuous = "points", combo = "dot", discrete = "ratio"),
+        #              lower = list(continuous = "points", combo = "dot", discrete = "ratio"),
+        #              diag = list(continuous = "bar", discrete = "bar"),
+        #              color="Missings", fill="Missings",alpha=I(0.5),
+        #              axisLabels = "none") )
+        print(ggpairs(dat,columns=1:n,colour="Missings", fill="Missings",alpha=I(0.5)))
       }
     }
     if (graphtype=="Parallel Coordinates") {
@@ -351,7 +351,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
-      print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing))
+      print(qplot(observation,variable,data=mapdat,geom='tile',fill=Missing,main='Original Missingness Map'))
       
       glay15[2, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
       Mapdat2=Mapdat[order(rowSums(Mapdat[,-(n+1)]),decreasing=TRUE),]
@@ -361,7 +361,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
-      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing))
+      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing,main='Sorted by the number of missing in variables and observations'))
       
       glay15[3, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
       dist31=dist(Mapdat[,-(n+1)])
@@ -375,7 +375,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
-      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing))
+      print(qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing,main='Sorted by hierarchical clustering of missingness'))
     }
     
   }
@@ -608,7 +608,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ##  New window for missing values      ##
   #####-------------------------------#####
   combo1 <- gwindow("Missing Values", visible = T, width = 1000,
-                    height = 700)
+                    height = 750)
   tab <- gnotebook(container = combo1)
   
   #####------------------------------------------------#####
@@ -621,24 +621,26 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group1100 = ggroup(container = group11, expand = TRUE)
   group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = TRUE)
-  
+  size(group12) = c(200,750)
   nametable = data.frame(Items=1:length(vname), Variables=vname,
                          Class=dataclass, NApct=as.character(round(vNApct,3)))
   nametable$Variables = as.character(nametable$Variables)
   nametable$Class = as.character(nametable$Class)
   gt11 = gtable(nametable, multiple = T, container = group12,
                 expand = TRUE, chosencol = 2)
+  size(gt11) = c(150,600)
   addhandlerdoubleclick(gt11, handler = VariableOptions)
   
   label121 = glabel('Categorical variables to condition on',container=group12)
   check123 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
     c('factor','logical','character')], container=group12, use.table=TRUE,
                             handler = Graph)
+  size(check123) = c(150,150)
   
   group13 = ggroup(horizontal = FALSE, container = group1100,
                    expand = TRUE)
   group14 = ggroup(horizontal = TRUE, container = group13)
-  
+  size(group14) = c(500,160)
   tmpcolorby = data.frame(`Color by the missing of`= c('Missing Any Variables',
                                                        'Missing on Selected Variables',nametable[vNApct>0,2]))
   tmpcolorby[,1]=as.character(tmpcolorby[,1])
@@ -660,13 +662,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group144 = ggroup(horizontal = FALSE, container = group14)
   gb145 = gbutton('Numeric summary', container = group144,
                   handler = NumSmry)
-  gb144 = gbutton("Plot", container = group144,
+  gb144 = gbutton("P l o t", container = group144,
                   handler = Graph)
   gb146 = gbutton('Export the data', container = group144,
                   handler = ExportData)
   gb148 = gbutton('Save the plot', container = group144,
                   handler = SavePlot)
-  gb147 = gbutton('Quit', container = group144,
+  gb147 = gbutton('Q u i t', container = group144,
                   handler = function(h,...){
                     dispose(combo1)
                   })
@@ -686,9 +688,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group2100 = ggroup(container = group21, expand = TRUE)
   group22 = ggroup(container = group2100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = T)
-  
+  size(group22) = c(200,750)
   gt21 = gtable(nametable, multiple = T, container = group22,
                 expand = TRUE, chosencol = 2)
+  size(gt21) = c(150,600)
   addHandlerMouseMotion(gt21, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("
 	This table displays all variables in the data set and
@@ -702,6 +705,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   label221 = glabel('Categorical variables to condition on',container=group22)
   check223 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
     c('factor','logical','character')], container=group22, use.table=TRUE)
+  size(check223) = c(150,150)
   addHandlerMouseMotion(check223, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("
 	This list displays all categorical variables.
@@ -717,7 +721,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group23 = ggroup(horizontal = FALSE, container = group2100,
                    expand = TRUE)
   group24 = ggroup(horizontal = TRUE, container = group23)
-  
+  size(group24) = c(500,160)
   radio225 = gtable(data.frame(`Color by the missing of`=
     c('Missing Any Variables','Missing on Selected Variables',nametable[vNApct>0,2])),
                     container = group24, expand=TRUE, handler=function(h,...){
