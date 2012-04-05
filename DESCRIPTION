@@ -18,12 +18,12 @@ Depends:
     GGally,
     ggplot2,
     Hmisc,
-    norm
-Imports:
-    reshape,
-    reshape2,
+    norm,
+    grid,
     plyr,
-    grid
+    reshape2
+Imports:
+    reshape
 License: GPL
 Collate:
     'MissingDataGUI-package.r'
