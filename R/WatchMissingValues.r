@@ -316,7 +316,8 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
       if (n==2) {
         print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
-                    size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]))
+                    size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) + 
+              opts(legend.position='bottom'))
       } else {
         dat$Missings=factor(Missing)
         #print(ggpairs(dat,columns=1:n,
@@ -341,7 +342,8 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       }
       glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
       dat$Missing=Missing
-      print(ggpcp(dat,vars=names(dat)[1:n])+geom_line(aes(colour=Missing)))
+      print(ggpcp(dat,vars=names(dat)[1:n])+geom_line(aes(colour=Missing))+ 
+            opts(legend.position='bottom'))
     }
     if (graphtype=="Missingness Map"){
       glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
