@@ -387,8 +387,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     if (length(cond)==0) cond = NULL
     
     if (n == 0) {
-        gmessage("Please select at least one variable!")
-        return()
+        svalue(gt11) = 1:nrow(gt11)
+        name_select = svalue(gt11, index = TRUE)
+        n = length(name_select)
+        gmessage("All variables are selected to export.")
     }
     
     if (!exists('imp_dat')) {
