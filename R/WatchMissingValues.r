@@ -1,3 +1,4 @@
+globalVariables(c("observation", "variable","Reordered_Observation"))
 ##' The Main Window of Missing Data GUI.
 ##'
 ##' This function is to open the missing data GUI. The widgets shown
