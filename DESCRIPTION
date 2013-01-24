@@ -1,8 +1,8 @@
 Package: MissingDataGUI
 Type: Package
 Title: A GUI for Missing Data Exploration
-Version: 0.1-3
-Date: 2012-03-25
+Version: 0.1-4
+Date: 2013-01-25
 Author: Xiaoyue Cheng, Dianne Cook, Heike Hofmann
 Maintainer: Xiaoyue Cheng <xycheng@iastate.edu>
 Description: This package provides numeric and graphical
@@ -14,12 +14,12 @@ Description: This package provides numeric and graphical
     categorical variable.
 Depends:
     gWidgetsRGtk2,
-    cairoDevice,
-    GGally
-Imports:
-    ggplot2,
     Hmisc,
     norm,
+    GGally,
+    ggplot2
+Imports:
+    cairoDevice,
     grid,
     plyr,
     reshape2,

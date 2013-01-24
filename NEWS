@@ -1,0 +1,15 @@
+Changes in Version 0.1-4
+
+NEW FEATURES
+
+  - A new window is created when hitting the button "Export Data" on the main GUI. This window provides the following options for exporting the imputed data:
+
+    * Whether to export the data of all the variables or only the selected variables. The default setting is all variables. If the user does not select anything when pressing the "Export Data" button, then all the variables are highlighted/selected.
+
+    * Whether to export the shadow matrix. Shadow matrix is useful to indicate the places of missing values / imputed values after the imputed data replace NA's.
+
+    * Where to save the exported data, i.e. to choose the directory.
+
+    * What name to use for the exported data.
+
+    * What format to save the data. Users can save them in a csv format or rda format file, or export the data to R console directly as a data frame.

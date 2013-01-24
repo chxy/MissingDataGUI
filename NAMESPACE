@@ -1,0 +1,5 @@
+exportPattern("^[^\\.]")
+importFrom(grid,viewport)
+importFrom(plyr,ddply)
+importFrom(reshape2,melt)
+importFrom(reshape,add.all.combinations)
