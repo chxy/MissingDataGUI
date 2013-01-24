@@ -429,7 +429,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     ExpText2 = gtext(text = getwd(), width=400, height=20, container = ExGroupB)
     ExButtoB = gbutton(text = "Browse...", container = ExGroupB, handler = function(h,...){
       ExFile = gfile(text = 'filename', type = 'selectdir')
-      svalue(ExpText2) = ExFile
+      if (!is.na(ExFile)) svalue(ExpText2) = ExFile
     })
     ExGroupT = ggroup(container = ExGroup, expand = FALSE, horizontal = TRUE)
     ExLabel1 = glabel(text = "File name ", container = ExGroupT)
