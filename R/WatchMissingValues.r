@@ -114,7 +114,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   #####------------------------------------------------------#####
   VariableOptions = function(h, ...) {
     gt11input = gwindow("Attributes", visible = T, width = 300,
-                        height = 200)
+                        height = 200, parent = combo1)
     gt11input0 = ggroup(horizontal = FALSE, container = gt11input,
                         expand = TRUE)
     gt11input1 = ggroup(container = gt11input0, expand = TRUE)
@@ -421,7 +421,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         if (opa=='Selected columns' && !opb) return(dat[,1:n])
     }
     
-    gExport = gwindow("Export Options", visible = T, width = 300, height = 200)
+    gExport = gwindow("Export Options", visible = T, width = 300, height = 200, parent = combo1)
     ExGroup = ggroup(container = gExport, expand = TRUE, horizontal = FALSE)
     ExFrame = gframe(text = "Export", container = ExGroup)
     ExRadio = gradio(c('All columns','Selected columns'), container = ExFrame)
