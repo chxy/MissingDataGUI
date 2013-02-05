@@ -81,31 +81,25 @@ This current work describes a new package for \proglang{R}, \pkg{MissingDataGUI}
 
 \section{Functionality}
 
+\subsection{Overview of missing data GUI}
+
+The missing data GUI looks as Figure \ref{fig: missingGUI}. All variables with the classes and the percentages of NA's are listed on the top left (area 1). The categorical variables are shown on the bottom left as the conditions (area 2). The variables having missing values are displayed under ``Color.by.the.missing.of'' on the top center (area 3). The first row ``Missing Any Variables'' in the list means whether the case has missing values in any variables, and the second row ``Missing on Selected Variables'' means whether the case has missings in those variables selected in area 1. ``Imputation Method'' (area 4) and ``Graph Type'' (area 5) are two radios interpreted in section 2.2 and 2.3. Five buttons on the top right (area 6) are: ``Numeric summary'' which will create a window like Figure \ref{fig: num-summry}; ``plot'' which produces the plots in the graphics device on the bottom right of GUI (area 7); ``Export the data'' which will save the imputed data into a data file or to \proglang{R} console; ``Save the plot'' which could save the plot in area 7 to a png file; ``Quit'' which will destroy the main GUI window and the derived child windows.
+
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
 \includegraphics[width=.9\textwidth]{fig1-1-0}
 \par\end{centering}
-
 \caption{Overview of the missing data GUI. Region 1 contains the list of variables, variable type, and summary of missings on that variable. Region 2 has a list of the categorical variables that can be used to conditionally impute values. Region 3 lists the variables with missing values to enable coloring by different types of missingness in the plots. Region 4 contains a radio button selection of imputation methods. Region 5 has several plot type selections, and section 6 allows selecting numeric or graphical summaries and some output routines. The summaries are displayed in the region 7.}
-\label{fig: missingGUI}
 \end{figure}
-
+\label{fig: missingGUI}
 \par\end{center}
-
-
-\subsection{Overview of missing data GUI}
-
-The missing data GUI looks as Figure \ref{fig: missingGUI}. All variables with the classes and the percentages of NA's are listed on the top left (area 1). The categorical variables are shown on the bottom left as the conditions (area 2). The variables having missing values are displayed under ``Color.by.the.missing.of'' on the top center (area 3). The first row ``Missing Any Variables'' in the list means whether the case has missing values in any variables, and the second row ``Missing on Selected Variables'' means whether the case has missings in those variables selected in area 1. ``Imputation Method'' (area 4) and ``Graph Type'' (area 5) are two radios interpreted in section 2.2 and 2.3. Five buttons on the top right (area 6) are: ``Numeric summary'' which will create a window like Figure \ref{fig: num-summry}; ``plot'' which produces the plots in the graphics device on the bottom right of GUI (area 7); ``Export the data'' which will save the imputed data into a data file or to \proglang{R} console; ``Save the plot'' which could save the plot in area 7 to a png file; ``Quit'' which will destroy the main GUI window and the derived child windows.
 
 \subsection{Summary of missing values}
 
 To investigate missingness in a data set, numerical summaries of the missings are initially calculated, as shown in Figure \ref{fig: num-summry}. The information at the top of the window contains the percent of the values that are missing, along with the percent of variables that contain missing values and the percent of the cases that have at least one missing value. Below this is a tabulation of the number of values missing per case - here at most 2 cases have 3 missing values, another 2 have 2 missing values, 167 cases have one missing value and there are 565 complete cases. In terms of percentages, 76.8\% of the cases are complete. This follows the style of the \pkg{norm} package for summarizing missingness.
 
-
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
 \includegraphics[width=0.4\textwidth]{Miss_fig2}
@@ -113,7 +107,6 @@ To investigate missingness in a data set, numerical summaries of the missings ar
 \caption{A numerical summary of missing values in the data is shown in a pop-up window.  The percentage of missings by total number of data values, by variables and by cases, is shown on the top. This dataset has 8 variables and the missing values across variables is summarized in the bottom table. No cases have more than 3 missing values.  76.8\% of cases are complete, 22.7\% of cases have one missing value, and only 4 cases have more than one missing values.}
 \label{fig: num-summry}
 \end{figure}
-
 \par\end{center}
 
 \subsection{Imputation}
@@ -124,6 +117,15 @@ A number of imputation methods are available in the package. The purpose of thes
 ``Multiple imputation'', ``Mode''. 
 The first four, as well as ``Mode'', are imputations on individual variables, and the remainder  ``Regression'', ``Nearest neighbor'', and ``Multiple imputation'' are imputations on the joint distribution of two or more  variables.
 
+\subsubsection{Univariate imputations}
+
+The simplest example is setting the missing values to 10\% below the minimum of each variable. The purpose of this approach is to demonstrate the missing values in a place where they can be distinguished from the non-missing values. In a scatterplot, all missing values will lie along a vertical line on the left or a horizontal line on the bottom of the display (Figure \ref{fig:univariate-imputation} (a)). In the histogram, missing values will form a bar to the left of other data values. And in the parallel coordinates plot, the missing values are at the bottom of each axis.
+
+Using the median, mean or mode of the complete cases on a variables is a common way to impute missing values. The median and mean are used for the continuous variables, and mode is used for categorical variables. The mean imputation keeps the variable mean as that of the complete cases. For a categorical variable, using the mode imputes the missing as the most common category. To examine the location of these imputed values as well as the complete values in graphs, points and bars are colored according to the missing status of the case. Figure \ref{fig:univariate-imputation} (b) and (c) give an example of the imputation by median and mean for real-valued variables.
+
+Choosing a ``random value''  will randomly select from the complete cases of a variable to impute the missing values, as shown in Figure \ref{fig:univariate-imputation} (d).
+
+Because these imputation methods operate separately on each variable, the resulting data have different covariance and correlation estimates. In some circumstances this may still enable reasonable further analysis.
 
 \begin{center}
 \begin{figure}[h]
@@ -137,20 +139,10 @@ The first four, as well as ``Mode'', are imputations on individual variables, an
 \includegraphics[width=0.45\textwidth]{fig3-4}
 \par\end{centering}
 
-\caption{\label{fig:univariate-imputation}Four panels of scatterplots displaying the results of different univariate imputations (cyan=missing, peach=not missing): (a) 10\% below the minimum (not strictly an imputation method, it is used more for displaying missings as part of a plot of complete cases); (b) median of each variable; (c) mean of each variable; (d) random selection from the complete cases. }
-
+\caption{Four panels of scatterplots displaying the results of different univariate imputations (cyan=missing, peach=not missing): (a) 10\% below the minimum (not strictly an imputation method, it is used more for displaying missings as part of a plot of complete cases); (b) median of each variable; (c) mean of each variable; (d) random selection from the complete cases. }
 \end{figure}
+\label{fig:univariate-imputation}
 \par\end{center}
-
-\subsubsection{Univariate imputations}
-
-The simplest example is setting the missing values to 10\% below the minimum of each variable. The purpose of this approach is to demonstrate the missing values in a place where they can be distinguished from the non-missing values. In a scatterplot, all missing values will lie along a vertical line on the left or a horizontal line on the bottom of the display (Figure \ref{fig:univariate-imputation} (a)). In the histogram, missing values will form a bar to the left of other data values. And in the parallel coordinates plot, the missing values are at the bottom of each axis.
-
-Using the median, mean or mode of the complete cases on a variables is a common way to impute missing values. The median and mean are used for the continuous variables, and mode is used for categorical variables. The mean imputation keeps the variable mean as that of the complete cases. For a categorical variable, using the mode imputes the missing as the most common category. To examine the location of these imputed values as well as the complete values in graphs, points and bars are colored according to the missing status of the case. Figure \ref{fig:univariate-imputation} (b) and (c) give an example of the imputation by median and mean for real-valued variables.
-
-Choosing a ``random value''  will randomly select from the complete cases of a variable to impute the missing values, as shown in Figure \ref{fig:univariate-imputation} (d).
-
-Because these imputation methods operate separately on each variable, the resulting data have different covariance and correlation estimates. In some circumstances this may still enable reasonable further analysis.
 
 \subsubsection{Multiple imputations}
 
@@ -163,19 +155,14 @@ The ``nearest neighbor'' method replaces a missing value with the mean of its 5 
 The strength of the above methods includes 1) they incorporate covariace information when calculating imputed values, and  2) ``regression'' and ``nearest neighbor'' can accommodate both continuous and categorical data.
 
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
 \includegraphics[width=.48\textwidth]{fig4-1}
 \includegraphics[width=.48\textwidth]{fig4-2}
 \par\end{centering}
-
-\caption{\label{fig: condition}{Comparison between imputations
-with and without conditions. The left panel is the imputation by median
-without condition and the right one is conditioned on year. In the left plot we can see that the imputed values fall between the two clusters, at the overall median. But when the imputation is conditioned on year (right plot), the imputed values are now better placed into the two clusters in the data.}}
-
+\caption{Comparison between imputations with and without conditions. The left panel is the imputation by median without condition and the right one is conditioned on year. In the left plot we can see that the imputed values fall between the two clusters, at the overall median. But when the imputation is conditioned on year (right plot), the imputed values are now better placed into the two clusters in the data.}
+\label{fig: condition}
 \end{figure}
-
 \par\end{center}
 
 \subsubsection{Conditional on the categorical variables}
@@ -189,7 +176,6 @@ The role of conditions in the imputation is revealed in Figure \ref{fig: conditi
 \subsection{Plot types}
 
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
 \includegraphics[width=.24\textwidth]{fig5-1-1}
@@ -202,12 +188,10 @@ The role of conditions in the imputation is revealed in Figure \ref{fig: conditi
 \includegraphics[width=.32\textwidth]{fig5-3-2}
 \includegraphics[width=.32\textwidth]{fig5-3-3}
 \par\end{centering}
-
-\caption{\label{fig:graphtypes}{Results for five types of graphs.
-The left two graphs on the first row are a barchart and a histogram; the right two on the first row are a spineplot and a spinogram. The left panel on the second row presents the pairwise plots, and the right on the second row is the parallel coordinates plot. All the plots above use ``below 10\%'' imputation and color by the missing of one variable - humidity. The graphs on the third row are missingness maps with different orders of variables and cases. The left panel gives the original order; the middle one sorts the variables and cases by a descreasing number of missing values; the right one sorts them by hierarchical clustering of missingness.}}
-
+\caption{Results for five types of graphs.
+The left two graphs on the first row are a barchart and a histogram; the right two on the first row are a spineplot and a spinogram. The left panel on the second row presents the pairwise plots, and the right on the second row is the parallel coordinates plot. All the plots above use ``below 10\%'' imputation and color by the missing of one variable - humidity. The graphs on the third row are missingness maps with different orders of variables and cases. The left panel gives the original order; the middle one sorts the variables and cases by a descreasing number of missing values; the right one sorts them by hierarchical clustering of missingness.}
+\label{fig:graphtypes}
 \end{figure}
-
 \par\end{center}
 
 Five types of graphs are available in the GUI: histogram (for continuous data)/barchart (for discrete data), spinogram/spineplot, pairwise plots, parallel coordinates plot, and missingness maps. For all those graphs, color represents missing or not missing of one or more variables with missing values. 
@@ -225,109 +209,82 @@ Missingness map works as a graphical version of the shadow matrix, which provide
 Figure \ref{fig:graphtypes} displays the different types of graphs in the missing data GUI. The color is based on whether missing in humidity except for the missingness maps. It is clear to see the location of incomplete cases at other covariates. Categorical covariates could also be displayed as boxplots or barcharts in pairwise plots. 
 
 \subsection{Design Issues}
-
-
-%\subsubsection{Maps to items in GUIs}
+%\subsection{Maps to items in GUIs}
 
 The missing data GUI is designed in one window. The list of variables, the radio for imputation methods, the checkbox group for the conditional variables, and the graphics device, except for the numeric summary, are all in the same window. An appropriate layout makes the widgets look not crowded, but very easy to maintain. 
 
+
+\subsection{Data Input and Output}
+
+Data can be read in as either a data frame or from a csv file. \code{MissingDataGUI(data=NULL)} is the starting function. To read in an existing data frame we only need to replace \code{NULL} with the data name. An advantage is that the type of variables (factor, numeric, ...) as characterized by R are used. This is the preferred approach.
+
+It is also possible to read from a csv file.  If \code{MissingDataGUI()} is called without a data frame argument, data import GUI is called (Figure \ref{fig: import}).  The ``Open'' button is for choosing files and the ``Watch Missing Values'' buttons will launch the missing data GUI. The file format must be csv(comma separated values) currently, and only one data set can be imported at any time.
+
+When other imputation methods are implemented on the data, it is easy to load the imputed data into the GUI. The user only need to provide a shadow matrix which is used to indicate the imputed values. In this situation, the imported structure should be a data frame or a csv file with first $n$ columns being the imputed data and the next $n$ columns being the shadow matrix.
+
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
 \includegraphics[width=0.9\textwidth]{Miss_fig6}
 \par\end{centering}
-
-\caption{\label{fig: import}{The data import GUI, with file selector, which is called by the ``open'' button. You could list more than one file in the data import GUI, but are only able to select one data set to check the missings. The first file is automatically chosen if none of the data sets is focused when clicking ``Watching Missing Values'' button. }}
-
+\caption{The data import GUI, with file selector, which is called by the ``open'' button. More than one file could be listed in the GUI, but only one data set is allowed active. The first file is automatically imported if none of the data sets are chosen when the ``Watching Missing Values'' button is hit. }
+\label{fig: import}
 \end{figure}
-
 \par\end{center}
 
-\subsection{Data Input and Output}
-
-The data can be read in as either a data frame or from a file. To read in a data frame, the data is input as a parameter to the \texttt{MissingDataGUI()} function.  An advantage is that the type of variables (factor, numeric, ...) as characterized by R are used. This is the preferred approach.
-
-It is also possible to read from a file.  If the \texttt{MissingDataGUI()} is called without a data frame argument, data import GUI is called (Figure \ref{fig: import}).  The ``Open'' button is for choosing files and the ``Watch Missing Values'' buttons opens the missing data GUI. The file should be a ``comma separated value'' file. Only one data set can be imported at any time.
-
-Two data sets are provided with the package, \texttt{tao}, used in the Example section, and \texttt{brfss}. The latter data set is a subset of the 2009 survey from the Behavioral Risk Factor Surveillance System (BRFSS), an ongoing data collection program designed to measure behavioral risk factors for the adult population (18 years of age or older) living in households. The website for this program is \url{http://www.cdc.gov/BRFSS/index.htm}.
-
-If other methods of imputation are preferred to the data, it is possible to load the imputed data into the GUI directly. To label the imputed values, a shadow matrix is required in the data. Hence the imported structure should be a data frame or a ``comma separated value'' file with first n columns being the imputed data and the next n columns being the shadow matrix.
-
+The imputed data can be saved by the ``Export the data'' button. Whether the exported data being imputed or not is indicated by the missing shadow matrix, which is also saved. 
 
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.9\textwidth]{Miss_fig7}
+\includegraphics[width=0.7\textwidth]{Miss_fig7}
 \par\end{centering}
-
-\caption{The help tab of missing data GUI. Mousing over any part of the GUI or clicking the radio/checkbox items will pop up text explanations in the summary region. All the widgets have their detailed introduction for each item.}
-\label{fig: missingGUI-help}
+\caption{The data export GUI.}
+\label{fig: export}
 \end{figure}
-
 \par\end{center}
-
 
 \subsection{Help tab}
 
 The help tab shown in Figure \ref{fig: missingGUI-help} has the same layout as the summary tab. The only difference is that the graphics device is replaced by the help document of each widget.
 
 \begin{center}
-%
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.6\textwidth]{Miss_fig8}
+\includegraphics[width=0.9\textwidth]{Miss_fig8}
 \par\end{centering}
-
-\caption{The attributes list for variable selection is interactive. The name can be edited, and the class could be changed to one of the four classes: integer, numeric, factor, and character. When a numeric variable is changed to a categorical variable, the condtions will be updated.}
-\label{fig: attributes}
+\caption{The help tab of missing data GUI. Mousing over any part of the GUI or clicking the radio/checkbox items will pop up text explanations in the summary region. All the widgets have their detailed introduction.}
+\label{fig: missingGUI-help}
 \end{figure}
-
 \par\end{center}
+
 
 \subsection{Additional features of the GUI}
 In this part some additional features of the missing data GUI are explained.
 \begin{itemize}
 \item Double clicking on any variables in the top left table will open an attributes window, as displayed in Figure \ref{fig: attributes}. When the class of a variable is changed from numeric or integer to factor or character, the variable will be automatically loaded into the checkbox group for conditions.
-\item The color by variable selector allows text entry to find the variable.
-%(Figure \ref{fig: colorby}). 
-This feature is very useful when there are a lot 
-of variables with missing values.
-%\end{itemize}
-%begin{center}
-%
-%\begin{figure}[h]
-%\begin{centering}
-%\includegraphics[width=0.4\textwidth]{colorby}
-%\par\end{centering}
-%\caption{The window of attributes for selecting variable to condition on.}
-%\label{fig: colorby}
-%\end{figure}
-
-%\par\end{center}
+\item The color by variable selector allows text entry to find the variable. This feature is very useful when there are a lot of variables with missing values.
 \item The plots can be saved to file using the ``Save the plot'' button. It saves them in \texttt{png} format. All of the figures in the Example section were saved this way.
-\item The imputed data can be saved by the ``Export the data'' button. Whether the exported data being imputed or not is indicated by the missing shadow matrix, which is also saved. 
-%Figure \ref{fig: savefile} presents the interface for saving data.
 \end{itemize}
-%\begin{center}
-%
-%\begin{figure}[h]
-%\begin{centering}
-%\includegraphics[width=0.5\textwidth]{save}
-%\par\end{centering}
 
-%\caption{The window for saving the imputed data set.} 
-%\label{fig: savefile}
-%\end{figure}
+\begin{center}
+\begin{figure}[h]
+\begin{centering}
+\includegraphics[width=0.6\textwidth]{Miss_fig9}
+\par\end{centering}
+\label{fig: attributes}
+\caption{The attributes list for variable selection is interactive. The name can be edited, and the class could be changed to one of the four classes: integer, numeric, factor, and character. When a numeric variable is changed to a categorical variable, the condtions will be updated.}
+\end{figure}
+\par\end{center}
 
-%\par\end{center}
 
 \section{Example}
 
-
 \subsection{Data}
-The data is from the Tropical Atmosphere Ocean project (TAO) \citep{tao}. The TAO array consists of approximately 70 moorings in the Tropical Pacific Ocean, telemetering oceanographic and meteorologic al data to shore in real-time via the Argos satellite system. A subset of data from 6 moorings in 1993 and 1997 is used for the example. The data has 8 variables (year, latitude, longitude, sea surface temperature, air temperature, humidity, uwind and vwind) and 736 observations. This subset is provided by \citet{CS07}. Open the data using the commands:
+
+Two data sets are provided with the package, \code{tao}, which is used as the example in this section, and \code{brfss}. \code{brfss} is a subset of the 2009 survey from the Behavioral Risk Factor Surveillance System, an ongoing data collection program designed to measure behavioral risk factors for the adult population (18 years of age or older) living in households. The website for this program is \url{http://www.cdc.gov/BRFSS/index.htm}.
+
+\code{tao} is from the Tropical Atmosphere Ocean project (TAO) \citep{tao}. The TAO array consists of approximately 70 moorings in the Tropical Pacific Ocean, telemetering oceanographic and meteorologic al data to shore in real-time via the Argos satellite system. A subset of data from 6 moorings in 1993 and 1997 is used for the example. The data has 8 variables (year, latitude, longitude, sea surface temperature, air temperature, humidity, uwind and vwind) and 736 observations. This subset is provided by \citet{CS07}. We can open the GUI with the following commands:
 
 \begin{Code}
 library(MissingDataGUI)
@@ -395,9 +352,7 @@ Different platforms (Windows, Linux, Mac) will differ the appearance of the GUI 
 
 This work was partially supported by an unrestricted fellowship from Novartis, and National Science Research grant DMS0706949.
 
-%\bibliographystyle{jss}
 \bibliography{MissingDataGUI}
-
 
 
 \section*{Appendix: Code for Nearest Neighbor Imputation}
