@@ -220,9 +220,9 @@ Pairwise plots are drawn by the function \code{ggpairs} of package \pkg{GGally} 
 
 Parallel coordinates plot is in the use of function \code{ggpcp} from package \pkg{ggplot2} \citep{ggplot2}.
 
-Missingness map provides an overview of the place of missing values for all variables. It works as a graphical version of the shadow matrix.
+Missingness map works as a graphical version of the shadow matrix, which provides an overview of the place of missing values in all variables. Assume that changing the order of variables and observations does not reduce any information, then agglomerating the missing values into blocks could enhance the understanding of missing patterns, especially for large data. Hence two re-ordered missingness maps are given besides the original map. One arranges the variables and cases by the number of missings, from the largest to the smallest; the other applies hierarchical clustering to both rows and columns.
 
-Figure \ref{fig:graphtypes} displays the different types of graphs in the missing data GUI. The color is based on whether missing in humidity except for the missingness maps. It is clear to see the location of incomplete cases at other covariates. Categorical covariates could also be displayed as boxplots or ratio plots in pairwise plots. 
+Figure \ref{fig:graphtypes} displays the different types of graphs in the missing data GUI. The color is based on whether missing in humidity except for the missingness maps. It is clear to see the location of incomplete cases at other covariates. Categorical covariates could also be displayed as boxplots or barcharts in pairwise plots. 
 
 \subsection{Design Issues}
 
