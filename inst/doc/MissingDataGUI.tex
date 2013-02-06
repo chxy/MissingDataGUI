@@ -102,7 +102,7 @@ To investigate missingness in a data set, numerical summaries of the missings ar
 \begin{center}
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.4\textwidth]{Miss_fig2}
+\includegraphics[width=0.4\textwidth]{fig2}
 \par\end{centering}
 \caption{A numerical summary of missing values in the data is shown in a pop-up window.  The percentage of missings by total number of data values, by variables and by cases, is shown on the top. This dataset has 8 variables and the missing values across variables is summarized in the bottom table. No cases have more than 3 missing values.  76.8\% of cases are complete, 22.7\% of cases have one missing value, and only 4 cases have more than one missing values.}
 \label{fig: num-summry}
@@ -216,7 +216,7 @@ The missing data GUI is designed in one window. The list of variables, the radio
 
 \subsection{Data Input and Output}
 
-Data can be read in as either a data frame or from a csv file. \code{MissingDataGUI(data=NULL)} is the starting function. To read in an existing data frame we only need to replace \code{NULL} with the data name. An advantage is that the type of variables (factor, numeric, ...) as characterized by R are used. This is the preferred approach.
+Data can be read in as either a data frame or from a csv file. \code{MissingDataGUI(data=NULL)} is the starting function. To read in an existing data frame we only need to replace \code{NULL} with the data name. An advantage is that the type of variables (factor, numeric, ...) as characterized by \proglang{R} are used. This is the preferred approach.
 
 It is also possible to read from a csv file.  If \code{MissingDataGUI()} is called without a data frame argument, data import GUI is called (Figure \ref{fig: import}).  The ``Open'' button is for choosing files and the ``Watch Missing Values'' buttons will launch the missing data GUI. The file format must be csv(comma separated values) currently, and only one data set can be imported at any time.
 
@@ -225,24 +225,25 @@ When other imputation methods are implemented on the data, it is easy to load th
 \begin{center}
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.9\textwidth]{Miss_fig6}
+\includegraphics[width=0.9\textwidth]{fig6}
 \par\end{centering}
 \caption{The data import GUI, with file selector, which is called by the ``open'' button. More than one file could be listed in the GUI, but only one data set is allowed active. The first file is automatically imported if none of the data sets are chosen when the ``Watching Missing Values'' button is hit. }
 \label{fig: import}
 \end{figure}
 \par\end{center}
 
-The imputed data can be saved by the ``Export the data'' button. Whether the exported data being imputed or not is indicated by the missing shadow matrix, which is also saved. 
+The imputed data can be saved by the ``Export the data'' button. Only the selected variables will be imputed, but users could choose whether to export the selected columns or all the columns (with NA's existing in the unselected variables). Shadow matrix is exported by default. As seen in Figure \ref{fig: export}, data could be saved in three ways: csv file, rda file, or a data frame in \proglang{R} session.
 
 \begin{center}
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.7\textwidth]{Miss_fig7}
+\includegraphics[width=0.6\textwidth]{fig7}
 \par\end{centering}
-\caption{The data export GUI.}
+\caption{The data export GUI. By default, all columns are exported with a shadow matrix. The current working directory is set to be the default directory.}
 \label{fig: export}
 \end{figure}
 \par\end{center}
+
 
 \subsection{Help tab}
 
@@ -251,7 +252,7 @@ The help tab shown in Figure \ref{fig: missingGUI-help} has the same layout as t
 \begin{center}
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.9\textwidth]{Miss_fig8}
+\includegraphics[width=0.9\textwidth]{fig8}
 \par\end{centering}
 \caption{The help tab of missing data GUI. Mousing over any part of the GUI or clicking the radio/checkbox items will pop up text explanations in the summary region. All the widgets have their detailed introduction.}
 \label{fig: missingGUI-help}
@@ -262,18 +263,18 @@ The help tab shown in Figure \ref{fig: missingGUI-help} has the same layout as t
 \subsection{Additional features of the GUI}
 In this part some additional features of the missing data GUI are explained.
 \begin{itemize}
-\item Double clicking on any variables in the top left table will open an attributes window, as displayed in Figure \ref{fig: attributes}. When the class of a variable is changed from numeric or integer to factor or character, the variable will be automatically loaded into the checkbox group for conditions.
-\item The color by variable selector allows text entry to find the variable. This feature is very useful when there are a lot of variables with missing values.
-\item The plots can be saved to file using the ``Save the plot'' button. It saves them in \texttt{png} format. All of the figures in the Example section were saved this way.
+\item Double clicking on any variables in the top left table will open an attribute window, as displayed in Figure \ref{fig: attributes}. When the class of a variable is changed from numeric or integer to factor or character, the variable will be automatically loaded into the checkbox group as the potential conditions.
+\item The color-by-variable selector allows text entry to find the variable. This feature is especially useful when there are many variables with missing values.
+\item The plots can be saved in a png file by ``Save the plot'' button. The imputation method and plot type will be auto-completed in the file name. All of the figures in the Example section were saved this way.
 \end{itemize}
 
 \begin{center}
 \begin{figure}[h]
 \begin{centering}
-\includegraphics[width=0.6\textwidth]{Miss_fig9}
+\includegraphics[width=0.6\textwidth]{fig9}
 \par\end{centering}
 \label{fig: attributes}
-\caption{The attributes list for variable selection is interactive. The name can be edited, and the class could be changed to one of the four classes: integer, numeric, factor, and character. When a numeric variable is changed to a categorical variable, the condtions will be updated.}
+\caption{The attributes list for variable selection is interactive. The name can be edited, and the class could be changed to one of the four classes: integer, numeric, factor, and character. When a numeric variable is changed to a categorical variable, the widget for conditions will be updated.}
 \end{figure}
 \par\end{center}
 
@@ -282,9 +283,9 @@ In this part some additional features of the missing data GUI are explained.
 
 \subsection{Data}
 
-Two data sets are provided with the package, \code{tao}, which is used as the example in this section, and \code{brfss}. \code{brfss} is a subset of the 2009 survey from the Behavioral Risk Factor Surveillance System, an ongoing data collection program designed to measure behavioral risk factors for the adult population (18 years of age or older) living in households. The website for this program is \url{http://www.cdc.gov/BRFSS/index.htm}.
+Two data sets are provided with the package: \code{tao}, which is used as the example in this section, and \code{brfss}. \code{brfss} is a subset of the 2009 survey from the Behavioral Risk Factor Surveillance System, an ongoing data collection program designed to measure behavioral risk factors for the adult population (18 years of age or older) living in households. The website for this program is \url{http://www.cdc.gov/BRFSS/index.htm}.
 
-\code{tao} is from the Tropical Atmosphere Ocean project (TAO) \citep{tao}. The TAO array consists of approximately 70 moorings in the Tropical Pacific Ocean, telemetering oceanographic and meteorologic al data to shore in real-time via the Argos satellite system. A subset of data from 6 moorings in 1993 and 1997 is used for the example. The data has 8 variables (year, latitude, longitude, sea surface temperature, air temperature, humidity, uwind and vwind) and 736 observations. This subset is provided by \citet{CS07}. We can open the GUI with the following commands:
+\code{tao} is from the Tropical Atmosphere Ocean project (TAO) \citep{tao}. The TAO array consists of approximately 70 moorings in the Tropical Pacific Ocean, telemetering oceanographic and meteorologic al data to shore in real-time via the Argos satellite system. A subset of data from 6 moorings in 1993 and 1997 is used for the example. The data has 8 variables (year, latitude, longitude, sea surface temperature, air temperature, humidity, uwind and vwind) and 736 observations. This subset is provided by \citet{CS07}. We can open the GUI by the following commands:
 
 \begin{Code}
 library(MissingDataGUI)
@@ -294,57 +295,40 @@ MissingDataGUI(tao)
 
 The numeric summary of all 8 variables in this data is shown in Figure \ref{fig: num-summry}.
 
-%The access
-%to data is as Figure \ref{fig: import} and by clicking the button
-%``Watch Missing Values'' in the data import
-%GUI we will get Figure \ref{fig: missingGUI} without activating the
-%graphics device. 
+%The access to data is as Figure \ref{fig: import} and by clicking the button ``Watch Missing Values'' in the data import GUI we will get Figure \ref{fig: missingGUI} without activating the graphics device. 
 
 \begin{figure*}[htp]
 \centerline{\includegraphics[width=0.49\textwidth]{tao1_pairwise.png}\includegraphics[width=0.49\textwidth]{tao2_pairwise.png}}
-\caption{(Left) Exploring the effect missingness of humidity (cyan) on sea and air temperature. Missings on humidity occur at the lower temperature values, suggesting a dependence relationship. Missing values are not missing at random. (Right) Exploring imputation methods. Imputation using the medians is shown here. Values that have been imputed are shown as cyan. Median imputation introduces a cross structure to the point scatter, and the imputed values don't match the data well, for example the line of imputed values very apart from the complete cases in the plot of the tao temperature variables.}
+\caption{(Left) Exploring the effect missingness of humidity (cyan) on sea and air temperature. Missings on humidity occur at the lower temperature values, suggesting a dependent relationship. Missing values are not missing at random. (Right) Exploring imputation methods. Imputation using the medians is shown here. Values that have been imputed are shown as cyan. Median imputation introduces a cross structure to the point scatter, and the imputed values don't match the data well, for example the line of imputed values is very apart from the complete cases in the plot of the tao temperature variables.}
 \label{tao1}
 \end{figure*}
 
 \subsection{Exploring Missings}
 
-Three of the 8 variables have missing values. First let's look at the distribution of missings on these variables. Figure \ref{tao1} (left) shows the pairwise plots of these three variables with missing values on humidity colored (cyan). Cases which are missing on humidity have  low values of sea and air temperature. This suggests a dependence pattern between humidity missingness and the temperature variables. Imputation methods that incorporate this dependence may be preferable.
+Three of the 8 variables have missing values. First let's look at the distribution of missings on these variables. Figure \ref{tao1} (left) shows the pairwise plots of these three variables with missing values on humidity colored (cyan). Cases which are missing on humidity have low values of sea and air temperature. This suggests the dependence between humidity missingness and the temperature variables. Imputation methods that incorporate this dependence may be preferable.
 
-Figure \ref{tao1} (right) shows the data imputed with median values (cyan). This imputation imposes a cross structure on the data, which doesn't match the shape of the complete cases very well. For example, there is a line of imputed values in the plot of air temperature vs sea surface temperature which is very separate from the rest of the complete cases. This imputation method doesn't work for this data!
-
-%\begin{figure*}[p]
-%\centerline{\includegraphics[width=0.9\textwidth]{tao2.png}}
-%\caption{Exploring imputation methods. Imputation using the medians is shown here. Values that have been imputed are shown as cyan. Median imputation introduces a cross structure to the point scatter, and the imputed values don't match the data well, for example the line of imputed values very apart from the complete cases in the plot of the teo temperature variables.}
-%\label{tao2}
-%\end{figure*}
+Figure \ref{tao1} (right) shows the data imputed with median values (cyan). This imputation imposes a cross structure on the data, which does not match the shape of the complete cases. For example, there is a line of imputed values in the plot of air temperature versus sea surface temperature which is far from the rest of the complete cases. Thus the imputation method does not work well for this data.
 
 Figure \ref{tao3} (left) shows the data conditional imputing with median values (cyan) by year. This better matches the distribution of complete cases, although the imputed values still form bands in the scatterplot. This might be a problem because the variance estimation will be affected. 
 
 
 \begin{figure*}[htp]
 \centerline{\includegraphics[width=0.49\textwidth]{tao3_pairwise.png}\includegraphics[width=0.49\textwidth]{tao5_pairwise.png}}
-\caption{(Left) Imputation using the median conditional on year. Imputed values better match the complete cses, with the exception of the banding due to fixed median value. (Right) Imputation using the regression conditional on year. The distribution of imputed values fairly closely matches the distribution of complete cases.}
+\caption{(Left) Imputation using the median conditional on year. Imputed values better match the complete cses, with the exception of the banding due to fixed median value. (Right) Imputation using the regression conditional on year. The distribution of imputed values is fairly close to the distribution of complete cases.}
 \label{tao3}
 \end{figure*}
 
 For this data, the better ways to impute the data would take the strong association between the variables into account. This suggests that regression, nearest neighbors, or multiple imputation might be the more desirable imputation methods. Figure \ref{tao3} (right) shows the results for regression-based imputation, conditional on year. The imputed values match the distribution of complete cases reasonably well. There are a few slight concerns: some of the imputed values have lower air temperature values than any of the complete cases, the spread of the imputed values is a little greater than the complete cases. But overall, this is probably as good as it is going to get with imputing the missings for this data set. It would be reasonable to export the imputed data for further analysis at this point.
 
-%\begin{figure*}[p]
-%\centerline{\includegraphics[width=0.45\textwidth]{tao5_pairwise.png}}
-%\caption{Imputation using the regression conditional on year. The distribution of imputed values fairly closely matches the distribution of complete cases.}
-%\label{tao4}
-%\end{figure*}
 
 \section{Discussion}
 
-The main goal of this work is to make it possible to see the the missing data and the impact of various imputation methods. In the future interactive data visualization may make it possible to brush points in a plot to more completely explore missing structure as we can in GGobi and MANET.
+The main goal of this work is to make it possible to see the the missing data and the impact of various imputation methods. In the future interactive data visualization will make it possible to brush points in a plot to more completely explore missing structure as we can in GGobi and MANET.
 
 
 \section*{Software}
 
-This missing data GUI is written in \proglang{R} 2.15.2 \citep{r} and
-based on the package \pkg{gWidgets} \citep{gwidgets} with the toolkit
-RGtk2. 
+This missing data GUI is written in \proglang{R} 2.15.2 \citep{r} and based on the package \pkg{gWidgets} \citep{gwidgets} with the toolkit RGtk2. 
 
 Different platforms (Windows, Linux, Mac) will differ the appearance of the GUI slightly, but the functions are consistent.
 
