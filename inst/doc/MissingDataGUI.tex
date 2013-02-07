@@ -187,7 +187,7 @@ When the variables of interest are bimodal or multi-modal, using the center stat
 
 The implementation of this idea produces the widget named ``categorical variables to condition on''. All categorical variables are listed with checkboxes. The variables checked will partition the data into blocks and then the imputation method is implemented in each block of the data. The procedure is as computing based on a conditional model given the category. However, the condition is invalid when the imputation method is ``Below 10\%'', since the aim of ``Below 10\%'' is only displaying the missings away from the non-missings, but giving the condition will mix the points again.
 
-The role of conditions in the imputation is revealed in Figure \ref{fig: condition}. Without the condition, the imputations may locate far away from the distribution of values (Figure \ref{fig: condition} left). But the group median is much better for summarizing the data (Figure \ref{fig: condition} right).
+The role of conditions in the imputation is revealed in Figure \ref{fig: condition}. Without the condition, the imputations may locate far away from the distribution of values (Figure \ref{fig: condition} left). But calculating separately by group provides a much better imputation for the data (Figure \ref{fig: condition} right).
 
 \subsection{Plot types}
 
@@ -220,7 +220,7 @@ Pairwise plots are drawn by the function \code{ggpairs} of package \pkg{GGally} 
 
 Parallel coordinates plot is in the use of function \code{ggpcp} from package \pkg{ggplot2} \citep{ggplot2}.
 
-Missingness map works as a graphical version of the shadow matrix, which provides an overview of the place of missing values in all variables. Assume that changing the order of variables and observations does not reduce any information, then agglomerating the missing values into blocks could enhance the understanding of missing patterns, especially for large data. Hence two re-ordered missingness maps are given besides the original map. One arranges the variables and cases by the number of missings, from the largest to the smallest; the other applies hierarchical clustering to both rows and columns.
+The missingness map works as a graphical version of the shadow matrix, which provides an overview of the place of missing values in all variables. Assume that changing the order of variables and observations does not reduce any information, then agglomerating the missing values into blocks could enhance the understanding of missing patterns, especially for large data. Hence two re-ordered missingness maps are given besides the original map. One arranges the variables and cases by the number of missings, from the largest to the smallest; the other applies hierarchical clustering to both rows and columns.
 
 Figure \ref{fig:graphtypes} displays the different types of graphs in the missing data GUI. The color is based on whether missing in humidity except for the missingness maps. It is clear to see the location of incomplete cases at other covariates. Categorical covariates could also be displayed as boxplots or barcharts in pairwise plots. 
 
@@ -248,7 +248,7 @@ When other imputation methods are implemented on the data, it is easy to load th
 \end{figure}
 \par\end{center}
 
-The imputed data can be saved by the ``Export the data'' button. Only the selected variables will be imputed, but users could choose whether to export the selected columns or all the columns (with NA's existing in the unselected variables). Shadow matrix is exported by default. As seen in Figure \ref{fig: export}, data could be saved in three ways: csv file, rda file, or a data frame in \proglang{R} session.
+The imputed data can be saved by the ``Export the data'' button. Only the selected variables will be imputed, but users could choose whether to export the selected columns or all the columns (with NA's existing in the unselected variables). The shadow matrix is exported by default, so that analysts can always track back to find the locations of the original missing values. As seen in Figure \ref{fig: export}, data could be saved in three ways: csv file, rda file, or a data frame in \proglang{R} session.
 
 \begin{center}
 \begin{figure}[h]
@@ -346,7 +346,7 @@ The main goal of this work is to make it possible to see the the missing data an
 
 This missing data GUI is written in \proglang{R} 2.15.2 \citep{r} and based on the package \pkg{gWidgets} \citep{gwidgets} with the toolkit RGtk2. 
 
-Different platforms (Windows, Linux, Mac) will differ the appearance of the GUI slightly, but the functions are consistent.
+On different platforms (Windows, Linux, Mac) the appearance of the GUI will differ slightly, but the functionality will be the same.
 
 \section*{Acknowledgements}
 
