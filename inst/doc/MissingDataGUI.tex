@@ -97,7 +97,7 @@ This current work describes a new package for \proglang{R}, \pkg{MissingDataGUI}
 
 \section{Functionality}
 
-\subsection{Overview of missing data GUI}
+\subsection{Overview of the missing data GUI}
 
 The missing data GUI looks as Figure \ref{fig: missingGUI}. All variables with the classes and the percentages of NA's are listed on the top left (area 1). The categorical variables are shown on the bottom left as the conditions (area 2). The variables having missing values are displayed under ``Color.by.the.missing.of'' on the top center (area 3). The first row ``Missing Any Variables'' in the list means whether the case has missing values in any variables, and the second row ``Missing on Selected Variables'' means whether the case has missings in those variables selected in area 1. ``Imputation Method'' (area 4) and ``Graph Type'' (area 5) are two radios interpreted in section 2.2 and 2.3. Five buttons on the top right (area 6) are: ``Numeric summary'' which will create a window like Figure \ref{fig: num-summry}; ``plot'' which produces the plots in the graphics device on the bottom right of GUI (area 7); ``Export the data'' which will save the imputed data into a data file or to \proglang{R} console; ``Save the plot'' which could save the plot in area 7 to a png file; ``Quit'' which will destroy the main GUI window and the derived child windows.
 
@@ -164,11 +164,11 @@ Because these imputation methods operate separately on each variable, the result
 
 These methods will conduct imputation on the joint distribution of the selected variables. 
 
-The ``regression'' method uses function \code{aregImpute} from package \pkg{Hmisc}. The function provides multiple imputation using additive regression, bootstrapping, and predictive mean matching\citep{hmisc}. The ``multiple Imputation'' method uses functions from package \pkg{norm}. The process generates samples from a multivariate normal model with estimated parameters via EM algorithm \citep{norm}, so it requires all of the selected variables to be numeric (at least integers).
+The ``regression'' method uses function \code{aregImpute} from package \pkg{Hmisc}. The function provides multiple imputation using additive regression, bootstrapping, and predictive mean matching \citep{hmisc}. The ``multiple imputation'' method uses functions from package \pkg{norm}. The process generates samples from a multivariate normal model with estimated parameters via EM algorithm \citep{norm}, so it requires all of the selected variables to be numeric (at least integers).
 
 The ``nearest neighbor'' method replaces a missing value with the mean of its 5 nearest neighbors by squared Euclidean distance. If there are ties in the distance ranking, then only the first five points are used, regardless to the tie. This method requires at least one case in the dataset to be complete, and no character variables. If there are less than five complete cases, the mean of them will be imputed. If none of the cases are complete, then the median of each variable is returned. The algorithm and code is described in the Appendix.
 
-The strength of the above methods includes 1) they incorporate covariace information when calculating imputed values, and  2) ``regression'' and ``nearest neighbor'' can accommodate both continuous and categorical data.
+The strength of the above methods includes 1) they incorporate covariance information when calculating imputed values, and  2) ``regression'' and ``nearest neighbor'' can accommodate both continuous and categorical data.
 
 \begin{center}
 \begin{figure}[h]
@@ -205,7 +205,7 @@ The role of conditions in the imputation is revealed in Figure \ref{fig: conditi
 \includegraphics[width=.32\textwidth]{fig5-3-3}
 \par\end{centering}
 \caption{Results for five types of graphs.
-The left two graphs on the first row are a barchart and a histogram; the right two on the first row are a spineplot and a spinogram. The left panel on the second row presents the pairwise plots, and the right on the second row is the parallel coordinates plot. All the plots above use ``below 10\%'' imputation and color by the missing of one variable - humidity. The graphs on the third row are missingness maps with different orders of variables and cases. The left panel gives the original order; the middle one sorts the variables and cases by a descreasing number of missing values; the right one sorts them by hierarchical clustering of missingness.}
+The left two graphs on the first row are a barchart and a histogram; the right two on the first row are a spineplot and a spinogram. The left panel on the second row presents the pairwise plots, and the right on the second row is the parallel coordinates plot. All the plots above use ``below 10\%'' imputation and color by the missing of one variable - humidity. The graphs on the third row are missingness maps with different orders of variables and cases. The left panel gives the original order; the middle one sorts the variables and cases by a decreasing number of missing values; the right one sorts them by hierarchical clustering of missingness.}
 \label{fig:graphtypes}
 \end{figure}
 \par\end{center}
@@ -216,7 +216,7 @@ The histograms and barcharts are shown one by one for all the variables selected
 
 The spinograms and spineplots are presented similar as histograms. Each bar has the same height, but is partitioned by two colors which represent the missing and non-missing values. The ratio of two heights is equal to the ratio of missings and non-missings too. Both histogram/barchart and spinogram/spineplot are based on the package \pkg{ggplot2} \citep{ggplot2}.
 
-Pairwise plots are drawn by the function \code{ggpairs} of package \pkg{GGally} \citep{ggally}. The variable names and scales lay on the diagonal. For the continous variables, the pairwise scatterplots are in the lower triangle while the correlation coefficients for both missing and non-missing values between every paired variables are shown in the upper triangle. For the categorical variables, barcharts by the categories of the vertical variable are given on both triangles. Again, the bars are colored in proportion to the missings. The combination of continuous and categorical variables is displayed as side-by-side boxplots of missing and non-missing values for each category on the upper triangle and side-by-side histograms on the lower triangle. Limited by the room of the graphics device in the main window, the pairwise plots cannot contain too many variables. The upper limit of the number of variables is set to be 5 and the lower limit is apparently 2.
+Pairwise plots are drawn by the function \code{ggpairs} of package \pkg{GGally} \citep{ggally}. The variable names and scales lay on the diagonal. For the continuous variables, the pairwise scatterplots are in the lower triangle while the correlation coefficients for both missing and non-missing values between every paired variables are shown in the upper triangle. For the categorical variables, barcharts by the categories of the vertical variable are given on both triangles. Again, the bars are colored in proportion to the missings. The combination of continuous and categorical variables is displayed as side-by-side boxplots of missing and non-missing values for each category on the upper triangle and side-by-side histograms on the lower triangle. Limited by the room of the graphics device in the main window, the pairwise plots cannot contain too many variables. The upper limit of the number of variables is set to be 5 and the lower limit is apparently 2.
 
 Parallel coordinates plot is in the use of function \code{ggpcp} from package \pkg{ggplot2} \citep{ggplot2}.
 
@@ -224,13 +224,13 @@ The missingness map works as a graphical version of the shadow matrix, which pro
 
 Figure \ref{fig:graphtypes} displays the different types of graphs in the missing data GUI. The color is based on whether missing in humidity except for the missingness maps. It is clear to see the location of incomplete cases at other covariates. Categorical covariates could also be displayed as boxplots or barcharts in pairwise plots. 
 
-\subsection{Design Issues}
+\subsection{Design issues}
 %\subsection{Maps to items in GUIs}
 
 The missing data GUI is designed in one window. The list of variables, the radio for imputation methods, the checkbox group for the conditional variables, and the graphics device, except for the numeric summary, are all in the same window. An appropriate layout makes the widgets look not crowded, but very easy to maintain. 
 
 
-\subsection{Data Input and Output}
+\subsection{Data input and output}
 
 Data can be read in as either a data frame or from a csv file. \code{MissingDataGUI(data=NULL)} is the starting function. To read in an existing data frame we only need to replace \code{NULL} with the data name. An advantage is that the type of variables (factor, numeric, ...) as characterized by \proglang{R} are used. This is the preferred approach.
 
@@ -295,13 +295,13 @@ In this part some additional features of the missing data GUI are explained.
 \par\end{center}
 
 
-\section{Example}
+\section{Examples}
 
 \subsection{Data}
 
 Two data sets are provided with the package: \code{tao}, which is used as the example in this section, and \code{brfss}. \code{brfss} is a subset of the 2009 survey from the Behavioral Risk Factor Surveillance System, an ongoing data collection program designed to measure behavioral risk factors for the adult population (18 years of age or older) living in households. The website for this program is \url{http://www.cdc.gov/BRFSS/index.htm}.
 
-\code{tao} is from the Tropical Atmosphere Ocean project (TAO) \citep{tao}. The TAO array consists of approximately 70 moorings in the Tropical Pacific Ocean, telemetering oceanographic and meteorologic al data to shore in real-time via the Argos satellite system. A subset of data from 6 moorings in 1993 and 1997 is used for the example. The data has 8 variables (year, latitude, longitude, sea surface temperature, air temperature, humidity, uwind and vwind) and 736 observations. This subset is provided by \citet{CS07}. We can open the GUI by the following commands:
+\code{tao} is from the Tropical Atmosphere Ocean project (TAO) \citep{tao}. The TAO array consists of approximately 70 moorings in the Tropical Pacific Ocean, telemetering oceanographic and meteorological data to shore in real-time via the Argos satellite system. A subset of data from 6 moorings in 1993 and 1997 is used for the example. The data has 8 variables (year, latitude, longitude, sea surface temperature, air temperature, humidity, uwind and vwind) and 736 observations. This subset is provided by \citet{CS07}. We can open the GUI by the following commands:
 
 \begin{Code}
 library(MissingDataGUI)
@@ -319,7 +319,7 @@ The numeric summary of all 8 variables in this data is shown in Figure \ref{fig:
 \label{tao1}
 \end{figure*}
 
-\subsection{Exploring Missings}
+\subsection{Exploring missings}
 
 Three of the 8 variables have missing values. First let's look at the distribution of missings on these variables. Figure \ref{tao1} (left) shows the pairwise plots of these three variables with missing values on humidity colored (cyan). Cases which are missing on humidity have low values of sea and air temperature. This suggests the dependence between humidity missingness and the temperature variables. Imputation methods that incorporate this dependence may be preferable.
 
@@ -330,7 +330,7 @@ Figure \ref{tao3} (left) shows the data conditional imputing with median values 
 
 \begin{figure*}[htp]
 \centerline{\includegraphics[width=0.49\textwidth]{tao3_pairwise.png}\includegraphics[width=0.49\textwidth]{tao5_pairwise.png}}
-\caption{(Left) Imputation using the median conditional on year. Imputed values better match the complete cses, with the exception of the banding due to fixed median value. (Right) Imputation using the regression conditional on year. The distribution of imputed values is fairly close to the distribution of complete cases.}
+\caption{(Left) Imputation using the median conditional on year. Imputed values better match the complete cases, with the exception of the banding due to fixed median value. (Right) Imputation using the regression conditional on year. The distribution of imputed values is fairly close to the distribution of complete cases.}
 \label{tao3}
 \end{figure*}
 
