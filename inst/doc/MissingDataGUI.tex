@@ -187,7 +187,7 @@ When the variables of interest are bimodal or multi-modal, using the center stat
 
 The implementation of this idea produces the widget named ``categorical variables to condition on''. All categorical variables are listed with checkboxes. The variables checked will partition the data into blocks and then the imputation method is implemented in each block of the data. The procedure is as computing based on a conditional model given the category. However, the condition is invalid when the imputation method is ``Below 10\%'', since the aim of ``Below 10\%'' is only displaying the missings away from the non-missings, but giving the condition will mix the points again.
 
-The role of conditions in the imputation is revealed in Figure \ref{fig: condition}. Without the condition, the imputations may locate far away from the distribution of values (Figure \ref{fig: condition} left). But calculating separately by group provides a much better imputation for the data (Figure \ref{fig: condition} right).
+The role of conditions in the imputation is revealed in Figure \ref{fig: condition}. Without the condition, the imputations may locate far away from the distribution of values (Figure \ref{fig: condition} left). But calculating separately by group provides a much better imputation (Figure \ref{fig: condition} right).
 
 \subsection{Plot types}
 
