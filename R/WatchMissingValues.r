@@ -655,10 +655,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = TRUE)
   size(group12) = c(200,750)
-  nametable = data.frame(Items=1:length(vname), Variables=vname,
-                         Class=dataclass, NApct=as.character(round(vNApct,3)))
-  nametable$Variables = as.character(nametable$Variables)
-  nametable$Class = as.character(nametable$Class)
+  nametable = data.frame(Items=1:length(vname), Variables=as.character(vname),
+                         Class=as.character(dataclass), NApct=as.character(round(vNApct,3)),
+                         stringsAsFactors=FALSE)
   gt11 = gtable(nametable, multiple = T, container = group12,
                 expand = TRUE, chosencol = 2)
   size(gt11) = c(150,600)
@@ -666,16 +665,15 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   
   label121 = glabel('Categorical variables to condition on',container=group12)
   check123 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
-    c('factor','logical','character')], container=group12, use.table=TRUE,
-                            handler = Graph)
+    c('factor','logical','character')], container=group12, use.table=TRUE)
   size(check123) = c(150,150)
   
-  group13 = ggroup(horizontal = FALSE, container = group1100,
-                   expand = TRUE)
+  group13 = ggroup(horizontal = FALSE, container = group1100, expand = TRUE)
   group14 = ggroup(horizontal = TRUE, container = group13)
   size(group14) = c(500,160)
   tmpcolorby = data.frame(`Color by the missing of`= c('Missing Any Variables',
-                                                       'Missing on Selected Variables',nametable[vNApct>0,2]))
+                                                       'Missing on Selected Variables',
+                                                       nametable[vNApct>0,2]))
   tmpcolorby[,1]=as.character(tmpcolorby[,1])
   radio125 = gtable(tmpcolorby, container=group14, expand=TRUE, multiple=TRUE)
   addHandlerKeystroke(radio125, handler = function(h,...){})
@@ -739,75 +737,62 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                    expand = TRUE)
   group24 = ggroup(horizontal = TRUE, container = group23)
   size(group24) = c(500,160)
+  help_colorlist = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means whether this case being complete or not.\n\n   The first row 'Missing on Selected Variables' means whether the cases have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
+  }
   radio225 = gtable(data.frame(`Color by the missing of`= c('Missing Any Variables',
                     'Missing on Selected Variables', nametable[vNApct>0,2])),
-                    container = group24, expand=TRUE, handler=function(h,...){
-                      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means whether this case being complete or not.\n\n   The first row 'Missing on Selected Variables' means whether the cases have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
-	})
-  addHandlerMouseMotion(radio225, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means whether this case being complete or not.\n\n   The first row 'Missing on Selected Variables' means whether the cases have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
-	})
+                    container = group24, expand = TRUE, handler = help_colorlist)
+  addHandlerMouseMotion(radio225, handler = help_colorlist)
   
   gframe242 = gframe(text = "Imputation Method", container = group24)
+  help_methods = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can select one of them if the data are not already imputed.\n\n      (1)'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored.\n\n      (2)'Median' means NA's will be replaced by the median of this variable (omit NA's).\n\n      (3)'Mean' means NA's will be replaced by the mean of this variable (omit NA's).\n\n      (4)'Random value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected.\n\n      (5)'Regression' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n      (6)'Nearest neighbor' replaces NA's by its nearest neighbor. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n      (7)'Multiple Imputation' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (8)'Mode' is a method for imputing categorical variables. It requires all selected variables to be character or factor or logical. It will replace NA's by the mode of the variable (omit NA's)."))
+  }
   gr242 = gradio(c('Below 10%','Median','Mean','Random value',
                    'Regression','Nearest neighbor','Multiple Imputation','Mode'),
-                 container = gframe242, handler = function(h,...){
-                   if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can select one of them if the data are not already imputed.\n\n      (1)'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored.\n\n      (2)'Median' means NA's will be replaced by the median of this variable (omit NA's).\n\n      (3)'Mean' means NA's will be replaced by the mean of this variable (omit NA's).\n\n      (4)'Random value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected.\n\n      (5)'Regression' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n      (6)'Nearest neighbor' replaces NA's by its nearest neighbor. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n      (7)'Multiple Imputation' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (8)'Mode' is a method for imputing categorical variables. It requires all selected variables to be character or factor or logical. It will replace NA's by the mode of the variable (omit NA's)."))
-	})
-  addHandlerMouseMotion(gr242, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   We can only select one of them.\n\n      (1)'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored.\n\n      (2)'Median' means NA's will be replaced by the median of this variable (omit NA's).\n\n      (3)'Mean' means NA's will be replaced by the mean of this variable (omit NA's).\n\n      (4)'Random value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected.\n\n      (5)'Regression' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n      (6)'Nearest neighbor' replaces NA's by its nearest neighbor. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n      (7)'Multiple Imputation' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (8)'Mode' is a method for imputing categorical variables. It requires all selected variables to be character or factor or logical. It will replace NA's by the mode of the variable (omit NA's)."))
-	})
+                 container = gframe242, handler = help_methods)
+  addHandlerMouseMotion(gr242, handler = help_methods)
   
   gframe243 = gframe(text = "Graph Type", container = group24)
+  help_plottype = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This frame shows all plots we can make.\n\n      (1)'Histogram/Barchart' will display histograms (numeric variables) and barcharts(categorical variables) for each variable selected.\n\n      (2)'Spinogram/Spineplot' shows the spineplot for each selected variable.\n\n      (3)'Pairwise Scatterplots' displays n*(n-1)/2 scatterplots if we select n variables. When n>5, then only the first 5 variables are displayed.\n\n      When n=2, a scatterplot is drawn for the two variables. When 2<n<=5, the function 'ggpairs' from package 'GGally' is used.\n\n      (4)'Parallel Coordinates' displays parallel coordinates plot for the selected variables.\n\n      (5)'Missingness Map' shows the positions of missing values in all the observations from the variable selected, regardless the imputation."))
+  }
   gr243 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
                    'Parallel Coordinates','Missingness Map'), container = gframe243,
-                 handler = function(h,...){
-                   if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This frame shows all plots we can make.\n\n      (1)'Histogram/Barchart' will display histograms (numeric variables) and barcharts(categorical variables) for each variable selected.\n\n      (2)'Spinogram/Spineplot' shows the spineplot for each selected variable.\n\n      (3)'Pairwise Scatterplots' displays n*(n-1)/2 scatterplots if we select n variables. When n>5, then only the first 5 variables are displayed.\n\n      When n=2, a scatterplot is drawn for the two variables. When 2<n<=5, the function 'ggpairs' from package 'GGally' is used.\n\n      (4)'Parallel Coordinates' displays parallel coordinates plot for the selected variables.\n\n      (5)'Missingness Map' shows the positions of missing values in all the observations from the variable selected, regardless the imputation."))
-	})
-  addHandlerMouseMotion(gr243, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This frame shows all plots we can make.\n\n      (1)'Histogram/Barchart' will display histograms (numeric variables) and barcharts(categorical variables) for each variable selected.\n\n      (2)'Spinogram/Spineplot' shows the spineplot for each selected variable.\n\n      (3)'Pairwise Scatterplots' displays n*(n-1)/2 scatterplots if we select n variables. When n>5, then only the first 5 variables are displayed.\n\n      When n=2, a scatterplot is drawn for the two variables. When 2<n<=5, the function 'ggpairs' from package 'GGally' is used.\n\n      (4)'Parallel Coordinates' displays parallel coordinates plot for the selected variables.\n\n      (5)'Missingness Map' shows the positions of missing values in all the observations from the variable selected, regardless the imputation."))
-	})
+                 handler = help_plottype)
+  addHandlerMouseMotion(gr243, handler = help_plottype)
   
   group244 = ggroup(horizontal = FALSE, container = group24)
-  gb245 = gbutton('Numeric summary', container = group244,
-                  handler = function(h,...){
-                    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases."))
-		})
-  addHandlerMouseMotion(gb245, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases."))
-	})
+  help_numeric_summary = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases."))
+  }
+  gb245 = gbutton('Numeric summary', container = group244, handler = help_numeric_summary)
+  addHandlerMouseMotion(gb245, handler = help_numeric_summary)
   
-  gb244 = gbutton("P l o t", container = group244,
-                  handler = function(h,...){
-                    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will draw a plot based on the options the user chooses.\n\n   All the n variables the user selected should be displayed, except that when the graph type is 'Pairwise Scatterplots' and n>5, then only the first 5	variables are displayed."))
-		})
-  addHandlerMouseMotion(gb244, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will draw a plot based on the options the user chooses.\n\n   All the n variables the user selected should be displayed, except that when the graph type is 'Pairwise Scatterplots' and n>5, then only the first 5	variables are displayed."))
-	})
+  help_plot = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will draw a plot based on the options the user chooses.\n\n   All the n variables the user selected should be displayed, except that when the graph type is 'Pairwise Scatterplots' and n>5, then only the first 5    variables are displayed."))
+  }
+  gb244 = gbutton("P l o t", container = group244, handler = help_plot)
+  addHandlerMouseMotion(gb244, handler = help_plot)
   
-  gb246 = gbutton('Export the data', container = group244,
-                  handler = function(h,...){
-                    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   Users could name the exported data, and the information of imputation method will be completed in the file name automatically.\n\n   Two file formats are provided: csv and rda. For both formats, the number of columns in the exported data depends on the demand of users. There are 2*n columns if the user selected n variables. The first n columns are the imputed data, and the second n columns are the 'shadow matrix' which indicate whether the values are missing or not in the original dataset."))
-		})
-  addHandlerMouseMotion(gb246, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   Users could name the exported data, and the information of imputation method will be completed in the file name automatically.\n\n   Two file formats are provided: csv and rda. For both formats, the number of columns in the exported data depends on the demand of users. There are 2*n columns if the user selected n variables. The first n columns are the imputed data, and the second n columns are the 'shadow matrix' which indicate whether the values are missing or not in the original dataset."))
-	})
+  help_export = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   Users could name the exported data, and the information of imputation method will be completed in the file name automatically.\n\n   Two file formats are provided: csv and rda. For both formats, the number of columns in the exported data depends on the demand of users. There are 2*n columns if the user selected n variables. The first n columns are the imputed data, and the second n columns are the 'shadow matrix' which indicate whether the values are missing or not in the original dataset."))
+  }
+  gb246 = gbutton('Export the data', container = group244, handler = help_export)
+  addHandlerMouseMotion(gb246, handler = help_export)
   
-  gb248 = gbutton('Save the plot', container = group244,
-                  handler = function(h,...){
-                    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will save the plot(s) to png file(s) based on the options the user chooses.\n\n   A user can define the file name for the plot, and the graph type will be suffixed automatically."))
-		})
-  addHandlerMouseMotion(gb248, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will save the plot(s) to png file(s) based on the options the user chooses.\n\n   A user can define the file name for the plot, and the graph type will be suffixed automatically."))
-	})
+  help_save = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will save the plot(s) to png file(s) based on the options the user chooses.\n\n   A user can define the file name for the plot, and the graph type will be suffixed automatically."))
+  }
+  gb248 = gbutton('Save the plot', container = group244, handler = help_save)
+  addHandlerMouseMotion(gb248, handler = help_save)
   
-  gb247 = gbutton('Q u i t', container = group244,
-                  handler = function(h,...){
-                    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will destroy the main window."))
-		})
-  addHandlerMouseMotion(gb247, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will destroy the main window."))
-	})
+  help_quit = function(h,...){
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will destroy the main window."))
+  }
+  gb247 = gbutton('Q u i t', container = group244, handler = help_quit)
+  addHandlerMouseMotion(gb247, handler = help_quit)
   
   
   group25 = ggroup(horizontal = FALSE, container = group23,
