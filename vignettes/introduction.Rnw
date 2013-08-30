@@ -1,0 +1,35 @@
+\documentclass[12pt]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose,lmargin=3cm,rmargin=3.4cm}
+\usepackage{graphicx}
+
+\makeatletter
+
+% \VignetteIndexEntry{MissingDataGUI: A Graphical User Interface for Exploring Missing Values in Data}
+
+\makeatother
+
+\begin{document}
+
+
+\title{MissingDataGUI: A Graphical User Interface for Exploring Missing Values in Data}
+
+
+\author{Xiaoyue Cheng%
+\thanks{Email: xycheng@iastate.edu%
+} \and Dianne Cook \and Heike Hofmann\\
+ Department of Statistics, Iowa State University}
+
+\maketitle
+
+\begin{abstract}
+Missing values are common in data, and usually require attention in order to conduct statistical analysis.  One of the first steps is to explore the structure of the missing values, and how missingness relates to the other collected variables.  This article describes an R package, that provides a graphical user interface (GUI) designed to help explore the missing data structure and examine the results of different imputation methods. The GUI provides numerical and graphical summaries conditional on missingness, and includes  imputations using fixed values, multiple imputations and nearest neighbors.
+
+\textbf{Keywords:} imputation, exploratory data analysis, statistical graphics, visualization.
+\end{abstract}
+
+More details please visit: https://github.com/chxy/MissingDataGUI
+
+\end{document}
