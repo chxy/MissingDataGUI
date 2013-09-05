@@ -227,7 +227,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
       }
       if (method == 'Mode') {
         if (any(c('integer','numeric') %in% vartype)) {
-          gmessage("The variables you selected contain numeric data. But I don't want to compute mode for numeric variables.", icon = "warning")
+          gmessage("You selected one or more numeric variables, of which the mode cannot be computed. Please re-select the variables.", icon = "error")
           dat = NULL
         } else {
           for (i in 1:n) {
