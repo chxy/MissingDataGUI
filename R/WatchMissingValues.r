@@ -314,46 +314,26 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         n = nrow(gt11)
         name_select = 1:n
     }
-    tmpdat = dataset[,gt11[name_select,2]]
-    if (n>1) {
-      totalmissingpct = mean(is.na(tmpdat))
-      varmissingpct = mean(sapply(tmpdat,function(avec){any(is.na(avec))}))
-      casemissingpct = 1-mean(complete.cases(tmpdat))
-      No_of_Case_missing = table(apply(tmpdat, 1, function(avec){sum(is.na(avec))}))
-      No_of_Case = rep(0,(n+1))
-      No_of_Case[n+1-as.integer(names(No_of_Case_missing))]=No_of_Case_missing[names(No_of_Case_missing)]
-      No_of_Case[n+1] = sum(complete.cases(tmpdat))
-      missingsummary = data.frame(No_of_miss_by_case=n:0,
-                                  No_of_Case=No_of_Case,
-                                  Percent=round(No_of_Case/nrow(tmpdat)*100,1))
-    } else {
-      totalmissingpct = mean(is.na(tmpdat))
-      varmissingpct = ifelse(totalmissingpct>0, 1, 0)
-      casemissingpct = 1-mean(complete.cases(tmpdat))
-      No_of_Case_missing = sum(is.na(tmpdat))
-      No_of_Case = c(No_of_Case_missing, length(tmpdat)-No_of_Case_missing)
-      missingsummary = data.frame(No_of_miss_by_case=1:0,
-                                  No_of_Case=No_of_Case,
-                                  Percent=round(No_of_Case/length(tmpdat)*100,1))
-    }
-    missingsummary = missingsummary[order(missingsummary$No_of_miss_by_case, decreasing=FALSE),]
     
-    NumSumforMisVal <- gwindow("Numeric Summary for Missing Values", visible = T, width = 350, height = 300, parent = combo1)
+    tmp = dataset[,gt11[name_select,2],drop=FALSE]
+    numsummary = compute_missing_pct(tmp)
+    
+    NumSumforMisVal <- gwindow("Numeric Summary for Missing Values", visible = T, width = 400, height = 300, parent = combo1)
     groupN1 = ggroup(container = NumSumforMisVal, horizontal = FALSE, expand = TRUE)
     labelN11 = glabel('Missing:', container=groupN1, pos=0)
-    labelN12 = glabel(paste("    ",round(totalmissingpct*100,2),
+    labelN12 = glabel(paste("    ",round(numsummary$totalmissingpct*100,2),
                             "% of the numbers",sep=""), container=groupN1)
-    labelN13 = glabel(paste("    ",round(varmissingpct*100,2),
+    labelN13 = glabel(paste("    ",round(numsummary$varmissingpct*100,2),
                             "% of variables",sep=""), container=groupN1)
-    labelN14 = glabel(paste("    ",round(casemissingpct*100,2),
+    labelN14 = glabel(paste("    ",round(numsummary$casemissingpct*100,2),
                             "% of samples",sep=""), container=groupN1)
     
     groupN15= ggroup(container = groupN1, use.scrollwindow = TRUE,
                      horizontal = FALSE, expand = TRUE)
-    missingsummary$No_of_miss_by_case = as.integer(missingsummary$No_of_miss_by_case)
-    missingsummary$No_of_Case = as.integer(missingsummary$No_of_Case)
-    missingsummary$Percent = as.character(missingsummary$Percent)
-    tableN15 = gtable(missingsummary, container=groupN15, expand = TRUE)
+    #missingsummary$No_of_miss_by_case = as.integer(numsummary$missingsummary$No_of_miss_by_case)
+    #missingsummary$No_of_Case = as.integer(numsummary$missingsummary$No_of_Case)
+    #missingsummary$Percent = as.character(numsummary$missingsummary$Percent)
+    tableN15 = gtable(numsummary$missingsummary, container=groupN15, expand = TRUE)
   }
   
   #####----------------------------#####
