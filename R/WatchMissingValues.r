@@ -205,7 +205,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                     theme(legend.position=legend.pos))
       } else {
           env$dat$Missings=factor(env$Missing)
-          print(ggpairs(env$dat,columns=1:env$n,colour="Missings", fill="Missings",alpha=I(0.5)))
+          print(ggpairs(env$dat,columns=1:env$n,colour="Missings",alpha=I(0.5),upper=list(continuous='density',combo='box',discrete='facetbar')))
       }
   }
   graph_pcp = function(){
