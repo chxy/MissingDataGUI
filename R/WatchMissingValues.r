@@ -1,5 +1,14 @@
 if(getRversion() >= '2.15.1') globalVariables(c("observation", "variable","Reordered_Observation"))
 
+# Service the colorblind
+# http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
+cbPalette = c("#E69F00", "#56B4E9", "#009E73", "#000000")
+scale_colour_discrete = function(...) scale_colour_manual(values=cbPalette)
+scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
+# ColorBrewer2.org
+# scale_colour_discrete = function(...) scale_colour_brewer(..., type="qual",palette="Dark2")
+# scale_fill_discrete = function(...) scale_fill_brewer(..., type="qual",palette="Dark2")
+
 ##' The Main Window of Missing Data GUI.
 ##'
 ##' This function is to open the missing data GUI. The widgets shown
@@ -106,7 +115,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   dataclass = as.character(sapply(dataset, class))
   NAcol = which(sapply(dataset, function(avec){all(is.na(avec))}))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
-
+  
   #####------------------------------------#####
   ##  Graph and SavePlot share too much code  ##
   ##  So I made the following functions       ##
@@ -121,7 +130,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       if (length(env$cond)==0 || env$imp_method=='Below 10%') assign('cond',NULL,envir=env)
       assign('colorby',as.character(svalue(radio125)),envir=env)
       if (length(env$colorby)==0) {
-          assign('colorby',"Missing Any Variables",envir=env)
+          assign('colorby',"Missing on Selected Variables",envir=env)
       } else {
           if ("Missing Any Variables" %in% env$colorby) {
               assign('colorby',"Missing Any Variables",envir=env)
@@ -134,11 +143,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   }
   initial_plot = function(){
       env=parent.frame()
-      attach(env)
-      if (n == 0) {
+      if (env$n == 0) {
           if (graphtype!="Missingness Map"){
               gmessage("Please select at least one variable!", icon = "error")
-              detach(env)
               return(TRUE)
           } else {
               env$name_select = 1:nrow(gt11)
@@ -146,61 +153,57 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
           }
       }
       
-      if ( (!exists('imp_dat'))  || graphtype!="Below 10%" ) {
-          dat = imputation(origdata=dataset[,c(gt11[env$name_select,2],cond)],
-                           method=imp_method, vartype=as.character(gt11[env$name_select,3]),
+      if ( (!exists('imp_dat',envir=env))  || env$graphtype!="Below 10%" ) {
+          dat = imputation(origdata=dataset[,c(gt11[env$name_select,2],env$cond),drop=FALSE],
+                           method=env$imp_method, vartype=as.character(gt11[env$name_select,3]),
                            missingpct=as.numeric(as.character(gt11[env$name_select,4])),
-                           condition=cond)
+                           condition=env$cond)
           env$dat = data.frame(dat)
-          if (nrow(env$dat)==0) {detach(env); return(TRUE)}
+          if (nrow(env$dat)==0) return(TRUE)
           colnames(env$dat)[1:env$n]=c(gt11[env$name_select,2])
       } else {
-          env$dat = data.frame(imp_dat[,c(gt11[env$name_select,2])],imp_dat[,ncol(imp_dat)])
+          env$dat = data.frame(env$imp_dat[,c(gt11[env$name_select,2])],env$imp_dat[,ncol(env$imp_dat)])
       }
       
       for (i in 1:env$n){
           eval(parse(text=paste("env$dat[,i]=as.",as.character(gt11[env$name_select,3])[i],"(as.character(env$dat[,i]))",sep="")))
       }
-      if (colorby=='Missing on Selected Variables') {
+      if (env$colorby=='Missing on Selected Variables') {
           Missing <- !complete.cases(dataset[,gt11[env$name_select,2]])
       } else {
-          if (colorby=='Missing Any Variables') {
+          if (env$colorby=='Missing Any Variables') {
               Missing <- !complete.cases(dataset)
           } else {
-              Missing <- !complete.cases(dataset[,colorby])
+              Missing <- !complete.cases(dataset[,env$colorby])
           }
       }
       env$Missing <- Missing[env$dat[,ncol(env$dat)]]
-      detach(env)
       return(FALSE)
   }
   graph_hist = function(i, pos){
       env=parent.frame()
-      if (is.numeric(env$dat[,i])) {
-          tmpdat = data.frame(env$dat,Missing=env$Missing)
-          print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
-                      fill=Missing, position=pos, xlab=names(tmpdat)[i]))
-      }
-      if (is.character(env$dat[,i])) {
-          tmpdat = data.frame(env$dat,Missing=env$Missing)
-          print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
-                      fill=Missing, position=pos, xlab=names(tmpdat)[i])+coord_flip())
-      }
+      if (!(is.numeric(env$dat[,i]) | is.character(env$dat[,i]) | is.factor(env$dat[,i]))) return()
+      tmpdat = data.frame(env$dat,Missing=env$Missing)
+      p=qplot(tmpdat[,i],data=tmpdat,geom='histogram',fill=Missing,
+              position=pos, xlab=names(tmpdat)[i])
+      if (is.numeric(env$dat[,i])) print(p)
+      if (is.character(env$dat[,i])) print(p+coord_flip())
       if (is.factor(env$dat[,i]) &
-          as.numeric(as.character(gt11[env$name_select,4]))[i]<1) {
-          tmpdat = data.frame(env$dat,Missing=env$Missing)
-          print(qplot(tmpdat[,i],data=tmpdat,geom='histogram',
-                      fill=Missing, position=pos, xlab=names(tmpdat)[i])+coord_flip())
-      }
+          as.numeric(as.character(gt11[env$name_select,4]))[i]<1) print(p+coord_flip())
   }
   graph_pair = function(legend.pos){
       env=parent.frame()
+      if (env$n < 2) {
+          gmessage("You selected less than two variables! Please re-select.", icon = "error")
+          return()
+      }
       if (env$n > 5) {
           gmessage("You selected more than five variables! Only the first five are displayed.", icon = "warning")
           env$n = 5
       }
       if (env$n==2) {
-          print(qplot(env$dat[,1],env$dat[,2], color=env$Missing, geom='jitter',alpha=I(0.7),
+          Missing=factor(env$Missing)
+          print(qplot(env$dat[,1],env$dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
                       size=I(3),xlab=colnames(env$dat)[1],ylab=colnames(env$dat)[2]) + 
                     theme(legend.position=legend.pos))
       } else {
@@ -210,16 +213,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   }
   graph_pcp = function(){
       env=parent.frame()
-      if (any(c('character','factor') %in% as.character(gt11[env$name_select,3]))){
-          gmessage('Now the parallel coordinates plot is only drawn for numeric variables. All the categorical variables will be removed from the plot.', icon = "warning")
-          env$idx = which(! as.character(gt11[env$name_select,3]) %in% c('character','factor'))
-          env$n = length(env$idx)
-      } else {env$idx = 1:env$n}
       if (env$n==1) {
           gmessage('You only selected one variable. Cannot plot the parallel coordinates.',
                    icon = "error")
           return(TRUE)
       }
+      env$dat$Missing = env$Missing
+      env$p = ggparcoord(env$dat,1:env$n,groupColumn='Missing',scale='uniminmax')
       return(FALSE)
   }
   graph_map = function(){
@@ -367,7 +367,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     if (graphtype=="Histogram/Barchart") {
       for (i in 1:n) {
         glay15[i, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-        graph_hist(i, "identity")
+        graph_hist(i, "stack")
       }
     }
     if (graphtype=="Spinogram/Spineplot") {
@@ -383,8 +383,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     if (graphtype=="Parallel Coordinates") {
       if (graph_pcp()) return()
       glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-      dat$Missing=Missing
-      print(ggparcoord(dat,idx,groupColumn='Missing')+theme(legend.position='bottom'))
+      print(p+theme(legend.position='bottom'))
     }
     if (graphtype=="Missingness Map"){
         q = graph_map()
@@ -506,8 +505,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         if (graph_pcp()) return()
         savename = gfile(type="save")
         png(filename = paste(savename,'_pcp.png',sep=''),width = (n+2), height = 4, units = "in", res=90)
-        dat$Missing=Missing
-        print(ggparcoord(dat,idx,groupColumn='Missing'))
+        print(p)
         dev.off()
     }
     if (graphtype=="Missingness Map"){
