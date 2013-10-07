@@ -49,201 +49,121 @@
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @importFrom plyr ddply
 imputation = function(origdata, method, vartype, missingpct, condition=NULL){
-  n=length(vartype)
-  dat = origdata
-  if (n==1){
-    if (method %in% c('Regression','Nearest neighbor','Multiple Imputation')) {
-      gmessage('You only selected one variable.
-				Cannot impute by regression, nearest neighbor,
-               or multiple imputation.',
-				icon = "error")
-      res = NULL
-    } else {
-      if (is.null(condition)) {
-        origshadow = is.na(origdata)
-        if (method == 'Below 10%') {
-          if (vartype %in% c('integer','numeric','logical') &
-            as.numeric(as.character(missingpct))>0) {
-            dat[origshadow] = min(origdata, na.rm=TRUE)*1.1-
-              max(origdata,na.rm=TRUE)/10
-          }
-          if (vartype=='character') {
-            dat[origshadow] = 'NAN'
-          }
-          if (vartype=='factor' &
-            as.numeric(as.character(missingpct))<1 &
-            as.numeric(as.character(missingpct))>0) {
-            dat=factor(dat,levels = c('NAN',levels(factor(dat))))
-            dat[origshadow] = 'NAN'
-          }
-          if (vartype=='factor' &
-            as.numeric(as.character(missingpct))==0) {
-            dat=factor(dat)
-          }
-        }
-        if (method == 'Median') {
-          dat = as.numeric(impute(dat, fun=median))
-        }
-        if (method == 'Mean') {
-          dat = as.numeric(impute(dat, fun=mean))
-        }
-        if (method == 'Random value') {
-          dat = as.numeric(impute(dat, fun='random'))
-        }
-        if (method == 'Mode') {
-          if (any(c('integer','numeric') %in% vartype)) {
-            gmessage("The variables you selected contain numeric data.
-							But I don't want to compute mode for numeric variables.",
-							icon = "warning")
-            dat = NULL
-          } else {
-            dat[origshadow] = names(sort(table(na.omit(dat)),decreasing=TRUE))[1]
-          }
-        }
-        if (!is.null(dat)) {
-          res = data.frame(dat,row_number=1:nrow(dat))
-        } else {res=NULL}
-      } else {
-        dat = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),
-                    condition,singleimputation,method=method,vartype=vartype,
-                    cond=condition)
-        if (!is.null(dat)) {
-          res = dat[,(ncol(dat)-1):ncol(dat)]
-        } else {res = NULL}
-      }
+    if (is.null(origdata)) return(NULL)
+    n=ncol(origdata)
+    if (n==1 && substr(method,1,3) == 'MI:'){
+        gmessage('You only selected one variable. Cannot apply the multiple imputation.', icon = "error")
+        return(NULL)
     }
-  } else {
+    dat = list(d1=origdata)
     origshadow = is.na(origdata[,1:n])
     if (is.null(condition)) {
       if (method == 'Below 10%') {
         for (i in 1:n) {
           if (vartype[i] %in% c('integer','numeric','logical') &
             as.numeric(as.character(missingpct))[i]>0) {
-            dat[origshadow[,i],i] = min(origdata[,i], na.rm=TRUE)*1.1-
+            dat$d1[origshadow[,i],i] = min(origdata[,i], na.rm=TRUE)*1.1-
               max(origdata[,i],na.rm=TRUE)/10
           }
           if (vartype[i] == "character") {
-            dat[origshadow[,i],i] = 'NAN'
+            dat$d1[origshadow[,i],i] = 'NAN'
           }
           if (vartype[i] == "factor" &
             as.numeric(as.character(missingpct))[i]<1 & as.numeric(as.character(missingpct))[i]>0) {
-            dat[,i]=factor(dat[,i],levels = c('NAN',levels(factor(dat[,i]))))
-            dat[origshadow[,i],i] = 'NAN'
+            dat$d1[,i]=factor(dat$d1[,i],levels = c('NAN',levels(factor(dat$d1[,i]))))
+            dat$d1[origshadow[,i],i] = 'NAN'
           }
           if (vartype[i] == "factor" &
             as.numeric(as.character(missingpct))[i]==0) {
-            dat[,i]=factor(dat[,i])
+            dat$d1[,i]=factor(dat$d1[,i])
           }
         }
+        names(dat)="Below 10%"
       }
-      if (method == 'Median') {
+      else if (method == 'Simple') {
+        dat$d2=dat$d1
         for (i in 1:n) {
-          dat[,i] = as.numeric(impute(dat[,i], fun=median))
-        }
-      }
-      if (method == 'Mean') {
-        for (i in 1:n) {
-          dat[,i] = as.numeric(impute(dat[,i], fun=mean))
-        }
-      }
-      if (method == 'Random value') {
-        for (i in 1:n) {
-          dat[,i] = as.numeric(impute(dat[,i], fun='random'))
-        }
-      }
-      if (method == 'Multiple Imputation') {
-        if (any(c('factor','character') %in% vartype)) {
-          gmessage("Not every variable is numeric. Cannot impute
-					missing values under the multivariate normal model.",
-					icon = "warning")
-          dat=NULL
-        } else {
-          s = prelim.norm(as.matrix(dat))
-          thetahat = em.norm(s)
-          rngseed(1234567)
-          dat = imp.norm(s,thetahat,as.matrix(dat))
-          if (any(sapply(dat,function(avec){any(c(Inf,NaN) %in% avec)}))) {
-            gmessage("This method doesn't converge.
-						Leave the NA's without imputation.",
-						icon = "warning")
-            dat = origdata
-          }
-        }
-      }
-      if (method == 'Regression') {
-        if (sum(complete.cases(origdata))==0) {
-          gmessage('All the samples have NAs.
-						Cannot impute by regression.',
-						icon = "warning")
-          dat=NULL
-        } else {
-          formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
-          f = aregImpute(formula0, data=origdata)
-          tmpres = f$imputed
-          for (i in 1:length(tmpres)) {
-            dat[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
-          }
-        }
-      }
-      if (method == 'Nearest neighbor') {
-        if (sum(complete.cases(origdata))==0) {
-          gmessage("All the samples have NA's.
-						Cannot impute by nearest neighbors.",
-						icon = "warning")
-          dat=NULL
-        } else {
-          if ("character" %in% vartype) {
-            gmessage('Cannot impute with character.',
-                     icon = "warning")
-            dat=NULL
+          dat$d1[,i] = as.numeric(impute(dat$d1[,i], fun=median))
+          if (vartype[i] %in% c('integer','numeric')) {
+              dat$d2[,i] = as.numeric(impute(dat$d2[,i], fun=mean))
           } else {
-            myNNdat = dat[complete.cases(dat),]
-            Missing_any = factor(apply(origshadow,1,any),
-                                 levels=c(FALSE,TRUE))
-            for (i in which(Missing_any=='TRUE')){
-              usecol = which(!is.na(dat[i,]))
-              if (length(usecol)!=0){
-                NNdat = myNNdat
-                a = rbind(dat[i,], NNdat)[,usecol]
-                NNdat$distance = dist(a)[1:nrow(NNdat)]
-                k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(5,nrow(NNdat)),]
-                if (nrow(k5NNdat)>1 & n-length(usecol)>1) {
-                  dat[,1:n][i,-usecol] = apply(k5NNdat[,1:n][,-usecol],2,mean)
-                } else {
-                  if (nrow(k5NNdat)==1) {
-                    dat[,1:n][i,-usecol] = k5NNdat[,1:n][1,-usecol]
-                  } else {
-                    dat[,1:n][i,-usecol] = mean(k5NNdat[,1:n][,-usecol])
-                  }
-                }
-              } else {
-                for (j in 1:n) {
-                  dat[i,j] = median(dat[,j], na.rm=TRUE)
-                }
+              dat$d2[origshadow[,i],i] = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
+          }
+        }
+        names(dat)=c('Median','Mean/Mode')
+      }
+      else if (method == 'Hot-deck') {
+          if (n==1 || sum(complete.cases(origdata))==0 || "character" %in% vartype) {
+              if (n==1) warning_message='You only selected one variable. Cannot apply the nearest neighbor imputation. Only the random value imputation is given.'
+              if (sum(complete.cases(origdata))==0) warning_message="All the observations have missing values. Cannot find the nearest neighbor."
+              if ("character" %in% vartype) warning_message='Cannot impute the nearest neighbor with one or more character variables.'
+              gmessage(warning_message, icon='warning')
+              for (i in 1:n) {
+                  dat$d1[,i] = as.numeric(impute(dat$d1[,i], fun='random'))
               }
-            }
+              names(dat)='Random Value'
+          } else {
+              dat$d2=dat$d1
+              for (i in 1:n) {
+                  dat$d1[,i] = as.numeric(impute(dat$d1[,i], fun='random'))
+              }
+              CmpltDat = dat$d2[complete.cases(dat$d2),]
+              for (i in which(!complete.cases(dat$d2))){
+                  usecol = which(!is.na(dat$d2[i,]))
+                  if (length(usecol)>0){
+                      NNdat = CmpltDat
+                      a = rbind(dat$d2[i,], NNdat)[,usecol]
+                      NNdat$distance = dist(a)[1:nrow(NNdat)]
+                      k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(5,nrow(NNdat)),]
+                      dat$d2[i,-usecol] = colMeans(k5NNdat[,1:n][,-usecol,drop=FALSE])
+                  } else {
+                      dat$d2[i,] = sapply(dat$d2, median, na.rm=TRUE)
+                  }
+              }
+              names(dat)=c('Random Value','Nearest Neighbor')
           }
-        }
       }
-      if (method == 'Mode') {
-        if (any(c('integer','numeric') %in% vartype)) {
-          gmessage("You selected one or more numeric variables, of which the mode cannot be computed. Please re-select the variables.", icon = "error")
-          dat = NULL
+      else if (method == 'MI:norm') {
+          if (any(c('factor','character') %in% vartype)) {
+              gmessage("Not every variable is numeric. Cannot impute missing values under the multivariate normal model.", icon = "error")
+              return(NULL)
+          } else {
+              dat$d3=dat$d2=dat$d1
+              s = prelim.norm(as.matrix(dat$d1))
+              thetahat = em.norm(s)
+              rngseed(1234567)
+              dat$d1 = imp.norm(s,thetahat,as.matrix(dat$d1))
+              dat$d2 = imp.norm(s,thetahat,as.matrix(dat$d2))
+              dat$d3 = imp.norm(s,thetahat,as.matrix(dat$d3))
+              if (any(sapply(dat,function(x){any(c(Inf,NaN) %in% x)}))) {
+                  gmessage("The algorithm doesn't converge. Return the original data with missing values.", icon = "warning")
+                  dat = list(d1=origdata)
+              }
+              names(dat)=paste('MI',1:3)
+          }
+      }
+      else if (method == 'MI:pmm') {
+        if (sum(complete.cases(origdata))==0) {
+            gmessage('All the observations have missing values. Cannot impute by Hmisc::aregImpute.', icon = "warning")
+            return(NULL)
         } else {
-          for (i in 1:n) {
-            dat[origshadow[,i],i] = names(sort(table(na.omit(dat[,i])),decreasing=TRUE))[1]
-          }
+            dat$d3=dat$d2=dat$d1
+            formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
+            f = aregImpute(formula0, data=origdata, n.impute=3)
+            tmpres = f$imputed
+            for (i in which(!sapply(tmpres,is.null))) {
+                dat$d1[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
+                dat$d2[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,2]
+                dat$d3[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,3]
+            }
+            names(dat)=paste('MI',1:3)
         }
       }
-      if (!is.null(dat)) {
-        res = data.frame(dat, row_number=1:nrow(origdata))
-      } else {res = NULL}
+      res = lapply(dat, function(x) data.frame(x, row_number=1:nrow(x)))
     } else {
-      dat = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),condition,singleimputation, method=method,vartype=vartype, cond=condition)
-      if (!is.null(dat)) {
-        res = dat[,(ncol(dat)-n):ncol(dat)]
-      } else {res = NULL}
+      dat$d1 = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),condition,singleimputation, method=method,vartype=vartype, cond=condition)
+      res = dat
+      res$d1 = res$d1[,(ncol(dat$d1)-n):ncol(dat$d1)]
     }
-  }
   return(res)
 }

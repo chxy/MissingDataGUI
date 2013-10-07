@@ -124,9 +124,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   #####------------------------------------#####
   initializ = function(){
       m$name_select=svalue(gt11, index = TRUE)
+      m$n=length(m$name_select)
       m$imp_method=svalue(gr142)
       m$graphtype=svalue(gr143)
-      m$n=length(m$name_select)
       m$cond=check123[svalue(check123,index=T)]
       if (length(m$cond)==0 || m$imp_method=='Below 10%') m$cond=NULL
       m$colorby=as.character(svalue(radio125))
@@ -150,24 +150,27 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
           } else {
               m$name_select = 1:nrow(gt11)
               m$n = length(m$name_select)
+              return(FALSE)
           }
-      }
+      } else if (m$graphtype=="Missingness Map") return(FALSE)
       
       if ( (!exists('imp_dat',envir=m))  || m$graphtype!="Below 10%" ) {
-          dat = imputation(origdata=dataset[,c(gt11[m$name_select,2],m$cond),drop=FALSE],
+          m$dat = imputation(origdata=dataset[,c(gt11[m$name_select,2],m$cond),drop=FALSE],
                            method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                            missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                            condition=m$cond)
-          m$dat = data.frame(dat)
-          if (nrow(m$dat)==0) return(TRUE)
-          colnames(m$dat)[1:m$n]=c(gt11[m$name_select,2])
+          if (all(sapply(m$dat,nrow)==0)) return(TRUE)
+          for (j in 1:length(m$dat)) colnames(m$dat[[j]])[1:m$n]=c(gt11[m$name_select,2])
       } else {
-          m$dat = data.frame(m$imp_dat[,c(gt11[m$name_select,2])],m$imp_dat[,ncol(m$imp_dat)])
+          m$dat = list(Imported=data.frame(m$imp_dat[,c(gt11[m$name_select,2])],m$imp_dat[,ncol(m$imp_dat)]))
       }
       
-      for (i in 1:m$n){
-          eval(parse(text=paste("m$dat[,i]=as.",as.character(gt11[m$name_select,3])[i],"(as.character(m$dat[,i]))",sep="")))
+      for (j in 1:length(m$dat)){
+          for (i in 1:m$n){
+              eval(parse(text=paste("m$dat[[j]][,i]=as.",as.character(gt11[m$name_select,3])[i],"(as.character(m$dat[[j]][,i]))",sep="")))
+          }
       }
+      
       if (m$colorby=='Missing on Selected Variables') {
           Missing <- !complete.cases(dataset[,gt11[m$name_select,2]])
       } else {
@@ -177,20 +180,21 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
               Missing <- !complete.cases(dataset[,m$colorby])
           }
       }
-      m$Missing <- Missing[m$dat[,ncol(m$dat)]]
+      m$Missing <- Missing[m$dat[[1]][,ncol(m$dat[[1]])]]
       return(FALSE)
   }
-  graph_hist = function(i, pos){
-      if (!(is.numeric(m$dat[,i]) | is.character(m$dat[,i]) | is.factor(m$dat[,i]))) return()
-      tmpdat = data.frame(m$dat,Missing=m$Missing)
+  graph_hist = function(j, i, pos){
+      dat = m$dat[[j]]
+      if (!(is.numeric(dat[,i]) | is.character(dat[,i]) | is.factor(dat[,i]))) return()
+      tmpdat = data.frame(dat,Missing=m$Missing)
       p=qplot(tmpdat[,i],data=tmpdat,geom='histogram',fill=Missing,
               position=pos, xlab=names(tmpdat)[i])
-      if (is.numeric(m$dat[,i])) print(p)
-      if (is.character(m$dat[,i])) print(p+coord_flip())
-      if (is.factor(m$dat[,i]) &
+      if (is.numeric(dat[,i])) print(p)
+      if (is.character(dat[,i])) print(p+coord_flip())
+      if (is.factor(dat[,i]) &
           as.numeric(as.character(gt11[m$name_select,4]))[i]<1) print(p+coord_flip())
   }
-  graph_pair = function(legend.pos){
+  graph_pair = function(j, legend.pos){
       if (m$n < 2) {
           gmessage("You selected less than two variables! Please re-select.", icon = "error")
           return()
@@ -199,24 +203,26 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
           gmessage("You selected more than five variables! Only the first five are displayed.", icon = "warning")
           m$n = 5
       }
+      dat = m$dat[[j]]
       if (m$n==2) {
           Missing=factor(m$Missing)
-          print(qplot(m$dat[,1],m$dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
-                      size=I(3),xlab=colnames(m$dat)[1],ylab=colnames(m$dat)[2]) + 
+          print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
+                      size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) + 
                     theme(legend.position=legend.pos))
       } else {
-          m$dat$Missings=factor(m$Missing)
-          print(ggpairs(m$dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous='density',combo='box',discrete='facetbar')))
+          dat$Missings=factor(m$Missing)
+          print(ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous='density',combo='box',discrete='facetbar')))
       }
   }
-  graph_pcp = function(){
+  graph_pcp = function(j){
       if (m$n==1) {
           gmessage('You only selected one variable. Cannot plot the parallel coordinates.',
                    icon = "error")
           return(TRUE)
       }
-      m$dat$Missing = m$Missing
-      m$p = ggparcoord(m$dat,1:m$n,groupColumn='Missing',scale='uniminmax')
+      dat = m$dat[[j]]
+      dat$Missing = m$Missing
+      m$p = ggparcoord(dat,1:m$n,groupColumn='Missing',scale='uniminmax')
       return(FALSE)
   }
   graph_map = function(){
@@ -356,40 +362,65 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   #####----------------------------#####
   Graph = function(h,...) {
     graphics.off()
+    glay15[1,1,expand=TRUE] = gnotebook(container = glay15, expand=TRUE)
+    l = length(glay15[1,1])
+    if (l>0) for (i in 1:l) dispose(glay15[1,1])
     
     initializ()
     if(initial_plot()) return()
     
+    if (m$graphtype == "Missingness Map") {
+        lab = "Map"; k=1
+    } else {
+        lab = names(m$dat); k = length(m$dat)
+    }
+    
+    group151 = glay151 = list()
+    for (j in 1:k) {
+        group151[[j]] = ggroup(container = glay15[1,1], label = lab[j], expand = TRUE, horizontal = FALSE)
+        glay151[[j]] = glayout(container = group151[[j]], expand = TRUE, use.scrollwindow = TRUE)
+    }
+    
     if (m$graphtype=="Histogram/Barchart") {
-      for (i in 1:m$n) {
-        glay15[i, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-        graph_hist(i, "stack")
+      for (j in 1:k) {
+          for (i in 1:m$n) {
+              glay151[[j]][i, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+              graph_hist(j, i, "stack")
+          }
       }
     }
     if (m$graphtype=="Spinogram/Spineplot") {
-      for (i in 1:m$n) {
-        glay15[i, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-        graph_hist(i, "fill")
-      }
+        for (j in 1:k) {
+            for (i in 1:m$n) {
+                glay151[[j]][i, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+                graph_hist(j, i, "fill")
+            }
+        }
     }
     if (m$graphtype=="Pairwise Plots") {
-        glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-        graph_pair('bottom')
+        for (j in 1:k) {
+            glay151[[j]][1, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+            graph_pair(j, 'bottom')
+        }
     }
     if (m$graphtype=="Parallel Coordinates") {
-      if (graph_pcp()) return()
-      glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
-      print(m$p+theme(legend.position='bottom'))
+        for (j in 1:k) {
+            if (!graph_pcp(j)) {
+                glay151[[j]][1, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+                print(m$p+theme(legend.position='bottom'))
+            }
+        }
     }
     if (m$graphtype=="Missingness Map"){
         q = graph_map()
-        glay15[1, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+        glay151[[1]][1, 1, expand = TRUE] = ggraphics(container = glay151[[1]], expand = TRUE)
         print(q$q1)
-        glay15[2, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+        glay151[[1]][2, 1, expand = TRUE] = ggraphics(container = glay151[[1]], expand = TRUE)
         print(q$q2)
-        glay15[3, 1, expand = TRUE] = ggraphics(container = glay15, expand = TRUE)
+        glay151[[1]][3, 1, expand = TRUE] = ggraphics(container = glay151[[1]], expand = TRUE)
         print(q$q3)
     }
+    svalue(glay15[1,1])=1
   }
   
   #####---------------------------------#####
@@ -399,7 +430,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ExportData = function(h,...){
       
       initializ()
-      FileSuffix = paste('_impute_',gsub('[^a-z,A-Z,0-9]',"",m$imp_method),sep='')
+      FileSuffix = paste('_impute_',gsub('[^a-zA-Z0-9]',"",m$imp_method),sep='')
       
       if (m$n == 0) {
           svalue(gt11) = 1:nrow(gt11)
@@ -474,39 +505,48 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   SavePlot = function(h,...){
     initializ()
     if(initial_plot()) return()
-    
+    if (m$graphtype == "Missingness Map") {
+        lab = "Map"; k=1
+    } else {
+        lab = gsub("[^A-Za-z0-9]","",names(m$dat)); k = length(m$dat)
+    }
+    savename = gfile(type="save")
     if (m$graphtype=="Histogram/Barchart") {
-      savename = gfile(type="save")
-      for (i in 1:m$n) {
-        png(filename = paste(savename,'_hist_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
-        graph_hist(i, 'identity')
-        dev.off()
+      for (j in 1:k) {
+          for (i in 1:m$n) {
+              png(filename = paste(savename,'_',lab[j],'_hist_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
+              graph_hist(j, i, 'identity')
+              dev.off()
+          }
       }
     }
     if (m$graphtype=="Spinogram/Spineplot") {
-      savename = gfile(type="save")
-      for (i in 1:m$n) {
-        png(filename = paste(savename,'_spinogram_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
-        graph_hist(i, "fill")
-        dev.off()
+      for (j in 1:k) {
+          for (i in 1:m$n) {
+              png(filename = paste(savename,'_',lab[j],'_spinogram_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
+              graph_hist(j, i, "fill")
+              dev.off()
+          }
       }
     }
     if (m$graphtype=="Pairwise Plots") {
-      savename = gfile(type="save")
-      png(filename = paste(savename,'_pairwise.png',sep=''), width = 2*m$n, height = 2*m$n, units = "in", res=90)
-      graph_pair('right')
-      dev.off()
+      for (j in 1:k) {
+          png(filename = paste(savename,'_',lab[j],'_pairwise.png',sep=''), width = 2*m$n, height = 2*m$n, units = "in", res=90)
+          graph_pair(j, 'right')
+          dev.off()
+      }
     }
     if (m$graphtype=="Parallel Coordinates") {
-        if (graph_pcp()) return()
-        savename = gfile(type="save")
-        png(filename = paste(savename,'_pcp.png',sep=''),width = (m$n+2), height = 4, units = "in", res=90)
-        print(m$p)
-        dev.off()
+        for (j in 1:k) {
+            if (!graph_pcp(j)) {
+                png(filename = paste(savename,'_',lab[j],'_pcp.png',sep=''),width = (m$n+2), height = 4, units = "in", res=90)
+                print(m$p)
+                dev.off()
+            }
+        }
     }
     if (m$graphtype=="Missingness Map"){
         q = graph_map()
-        savename = gfile(type="save")
         png(filename = paste(savename,'_map_1.png',sep=''),width = 6, height = max(4,round(m$n/8)), units = "in", res=90)
         print(q$q1)
         dev.off()
@@ -561,8 +601,8 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   radio125 = gtable(tmpcolorby, container=group14, expand=TRUE, multiple=TRUE)
   addHandlerKeystroke(radio125, handler = function(h,...){})
   gframe142 = gframe(text = "Imputation Method", container = group14)
-  gr142 = gradio(c('Below 10%','Median','Mean','Random value',
-                   'Regression','Nearest neighbor','Multiple Imputation','Mode'),
+  gr142 = gradio(c('Below 10%','Simple','Hot-deck','MI:pmm',
+                   'MI:norm','MI:mice','MI:mi'),
                  container = gframe142, handler = function(h,...){
                    if (svalue(gr142)=='Below 10%') {
                      svalue(check123) = FALSE
