@@ -4,25 +4,36 @@
 ##' This function provides eight methods for imputation with
 ##' categorical varaibles as conditions.
 ##'
-##' The imputation methods: (1)'Below 10%' means NA's of one variable
-##' will be replaced by the value which equals to the minimum of the
-##' variable minus 10% of the range. (2)'Median' means NA's will be
-##' replaced by the median of this variable (omit NA's). (3)'Mean'
-##' means NA's will be replaced by the mean of this variable (omit
-##' NA's). (4)'Random value' means NA's will be replaced by any values
-##' of this variable (omit NA's) which are randomly selected.
-##' (5)'Regression' uses function \code{\link[Hmisc]{aregImpute}} from
-##' package \pkg{Hmisc}. It requires at least two variables to be
-##' selected.  (6)'Nearest neighbor' replaces NA's by its nearest
-##' neighbor. It requires at least two variables to be selected, and
-##' no character variables. It returns median for the case if all
-##' values in it are NA's. (7)'Multiple Imputation' uses functions
-##' from package \pkg{norm}. It requires all selected variables to be
-##' numeric (at least integer), and at least two variables to be
-##' selected. (8)'Mode' is a method for imputing categorical
-##' variables. It requires all selected variables to be character or
-##' factor or logical. It will replace NA's by the mode of the
-##' variable (omit NA's).
+##' The imputation methods: This list displays all the imputation methods.
+##' Users can make one selection. (1) 'Below 10%' means NA's 
+##' of one variable will be replaced by the value which equals 
+##' to the minimum of the variable minus 10% of the range. 
+##' Under this status the selected conditioning variables are 
+##' ignored. If the data are already imputed, then this item 
+##' will show the imputed result. (2) 'Simple' will create two 
+##' tabs: Median and Mean/Mode. 'Median' means NA's will be 
+##' replaced by the median of this variable (omit NA's). 
+##' 'Mean/Mode' means NA's will be replaced by the mean of the 
+##' variable (omit NA's) if it is quantitative, and by the 
+##' mode of the variable (omit NA's) if it is categorical. 
+##' (3) 'Hot-deck' contains two methods: 'Random Value' and 
+##' 'Nearest Neighbor'. 'Random Value' means NA's will be 
+##' replaced by any values of this variable (omit NA's) which 
+##' are randomly selected. 'Nearest neighbor' will replace the 
+##' NA's by the mean of five nearest neighbors. It requires at 
+##' lease one case to be complete, at least two variables to 
+##' be selected, and no character variables. It returns median 
+##' for the case if all values in it are NA's.
+##' (4) 'MI:pmm' uses function \code{\link[Hmisc]{aregImpute}} 
+##' from package \pkg{Hmisc}. It requires at lease one case 
+##' to be complete, and at least two variables to be selected.
+##' (5) 'MI:norm' uses function \code{\link[norm]{imp.norm}} 
+##' from package \pkg{norm}. It requires all selected variables 
+##' to be numeric(at least integer), and at least two variables 
+##' to be selected. Sometimes it cannot converge, then the 
+##' programme will leave NA's without imputation.
+##' (6) 'MI:mice' uses the \pkg{mice} package.
+##' (7) 'MI:mi' employes the \pkg{mi} package.
 ##' @param origdata A data frame whose missing values need to be
 ##' imputed. This data frame should be selected from the missing data
 ##' GUI.
@@ -41,6 +52,9 @@
 ##' imputation is implemented in each group. There are no missing
 ##' values in those variables. If it is null, then there is no
 ##' division. The imputation is based on the whole dataset.
+##' @param row_var A column name (character) that defines the ID of rows.
+##' @param loop if it is in an internal loop by the conditional variables,
+##' then loop=condtion.
 ##' @return The imputed data frame with the last column being the row
 ##' number from the original dataset. During the procedure of the
 ##' function, rows may be exchanged, thus a column of row number could
@@ -48,16 +62,36 @@
 ##' shadow matrix.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @importFrom plyr ddply
-imputation = function(origdata, method, vartype, missingpct, condition=NULL){
+imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_var=NULL,loop=NULL){
     if (is.null(origdata)) return(NULL)
+    row_NO = if (is.null(row_var)) {1:nrow(origdata)} else {origdata[,row_var]}
+    cond = if (is.null(loop)) {NULL} else {origdata[,loop,drop=FALSE]}
+    origdata = origdata[,setdiff(colnames(origdata),c(row_var,loop))]
     n=ncol(origdata)
     if (n==1 && substr(method,1,3) == 'MI:'){
         gmessage('You only selected one variable. Cannot apply the multiple imputation.', icon = "error")
         return(NULL)
     }
-    dat = list(d1=origdata)
-    origshadow = is.na(origdata[,1:n])
-    if (is.null(condition)) {
+    if (!is.null(condition)) {
+        dat = by(data.frame(origdata,row_id=1:nrow(origdata)),origdata[,condition],imputation,method=method,vartype=vartype,missingpct=missingpct,condition=NULL,row_var='row_id',loop=condition)
+        dat = dat[!sapply(dat,is.null)]
+        k1=length(dat[[1]])
+        k2=length(dat)
+        res=list()
+        for (j in 1:k1) res[[j]]=lapply(dat,function(x) x[[j]])
+        names(res)=names(dat[[1]])
+        res=lapply(res, function(x){
+            tmp=NULL
+            for (i in 1:k2) {
+                tmp=rbind(tmp,x[[i]])
+            }
+            return(tmp)
+        })
+        return(res)
+    }
+
+        dat = list(d1=origdata)
+        origshadow = is.na(origdata[,1:n])
       if (method == 'Below 10%') {
         for (i in 1:n) {
           if (vartype[i] %in% c('integer','numeric','logical') &
@@ -159,11 +193,6 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL){
             names(dat)=paste('MI',1:3)
         }
       }
-      res = lapply(dat, function(x) data.frame(x, row_number=1:nrow(x)))
-    } else {
-      dat$d1 = ddply(data.frame(origdata,row_number_2011=1:nrow(origdata)),condition,singleimputation, method=method,vartype=vartype, cond=condition)
-      res = dat
-      res$d1 = res$d1[,(ncol(dat$d1)-n):ncol(dat$d1)]
-    }
+      res = lapply(dat, function(x) if (is.null(loop)) {data.frame(x, row_number=row_NO)} else{data.frame(x, cond, row_number=row_NO)})
   return(res)
 }

@@ -30,6 +30,5 @@ Collate:
     'MissingDataGUI.r'
     'WatchMissingValues.r'
     'imputation.r'
-    'SingleImputation.r'
     'numsummary.r'
     'zzz.r'
