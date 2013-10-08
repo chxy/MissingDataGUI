@@ -430,7 +430,6 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ExportData = function(h,...){
       
       initializ()
-      FileSuffix = paste('_impute_',gsub('[^a-zA-Z0-9]',"",m$imp_method),sep='')
       
       if (m$n == 0) {
           svalue(gt11) = 1:nrow(gt11)
@@ -443,21 +442,26 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                        method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                        missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                        condition=m$cond)
-      dat = data.frame(dat[,-ncol(dat)],is.na(dataset[dat[,ncol(dat)],gt11[m$name_select,2]]))
-      colnames(dat)[1:(2*m$n)]=c(gt11[m$name_select,2],
-                               paste('Missing', gt11[m$name_select,2], sep='_'))
-   
-    entire_dat = data.frame(dataset,is.na(dataset))
-    colnames(entire_dat)=c(colnames(dataset),paste('Missing',colnames(dataset),sep='_'))
-    entire_dat[,colnames(dat[,1:(2*m$n)])] = dat[,1:(2*m$n)]
+      dat = lapply(dat, function(x) {
+          x = data.frame(x[,-ncol(x)],is.na(dataset[x[,ncol(x)],gt11[m$name_select,2]]))
+          colnames(x) = c(gt11[m$name_select,2],paste('Missing', gt11[m$name_select,2], sep='_'))
+          return(x)
+          })
+      
+      entire_dat = dat
+      for (j in 1:length(dat)) {
+          entire_dat[[j]] = data.frame(dataset,is.na(dataset))
+          colnames(entire_dat[[j]])=c(colnames(dataset),paste('Missing',colnames(dataset),sep='_'))
+          entire_dat[[j]][,colnames(dat[[j]][,1:(2*m$n)])] = dat[[j]][,1:(2*m$n)]
+      }
     
     ExpData = function(opa,opb){
         opa = svalue(opa)
         opb = svalue(opb)
         if (opa=='All columns' && opb) return(entire_dat)
-        if (opa=='Selected columns' && opb) return(dat[,1:(2*m$n)])
-        if (opa=='All columns' && !opb) return(entire_dat[,1:ncol(dataset)])
-        if (opa=='Selected columns' && !opb) return(dat[,1:m$n])
+        if (opa=='Selected columns' && opb) return(dat)
+        if (opa=='All columns' && !opb) return(lapply(entire_dat, function(x) x[,1:ncol(dataset)]))
+        if (opa=='Selected columns' && !opb) return(lapply(dat, function(x) x[,1:m$n]))
     }
     
     gExport = gwindow("Export Options", visible = T, width = 300, height = 200, parent = combo1)
@@ -478,23 +482,31 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     ExGroupB = ggroup(container = ExGroup, expand = TRUE, horizontal = TRUE)
     addSpace(ExGroupB, 20)
     ExButto1 = gbutton(text = "Save as .csv format", container = ExGroupB, handler=function(h,...){
-        filename = paste(gsub('\\.csv$','',svalue(ExpText1)),FileSuffix,'.csv',sep='')
-        write.csv(ExpData(ExRadio,ExCheck), file=paste(svalue(ExpText2),'/',filename,sep=''), row.names=FALSE)
+        fexdat = ExpData(ExRadio,ExCheck)
+        filename = paste(svalue(ExpText2),'/',gsub('\\.csv$','',svalue(ExpText1)),sep='')
+        fileSuffix = paste('_impute_',gsub('(MI:)|(%)|( )',"",m$imp_method),'_',gsub('[^a-zA-Z0-9]',"",names(fexdat)),sep='')
+        for (j in 1:length(fexdat)) {
+            write.csv(fexdat[[j]], file=paste(filename,fileSuffix[j],'.csv',sep=''), row.names=FALSE)
+        }
         gmessage("The data is exported!")
+        dispose(gExport)
     })
     addSpace(ExGroupB, 20)
     ExButto2 = gbutton(text = "Save as .rda format", container = ExGroupB, handler=function(h,...){
-        filename = paste(gsub('\\.rda$','',svalue(ExpText1)),FileSuffix,'.rda',sep='')
         fexdat = ExpData(ExRadio,ExCheck)
-        save(fexdat, file=paste(svalue(ExpText2),'/',filename,sep=''))
+        filename = paste(svalue(ExpText2),'/',gsub('\\.rda$','',svalue(ExpText1)),sep='')
+        fileSuffix = paste('_impute_',gsub('[^a-zA-Z0-9]',"",m$imp_method),sep='')
+        save(fexdat, file=paste(filename,fileSuffix,'.rda',sep=''))
         gmessage("The data is exported!")
+        dispose(gExport)
     })
     addSpace(ExGroupB, 20)
-    ExButto3 = gbutton(text = "Save as data frame", container = ExGroupB, handler=function(h,...){
+    ExButto3 = gbutton(text = "Save as a list of data frames", container = ExGroupB, handler=function(h,...){
         filename = svalue(ExpText1)
         fexdat = ExpData(ExRadio,ExCheck)
         eval(parse(text=paste(filename,'<<- fexdat')))
         gmessage(paste("An R data frame is saved with the name ",filename))
+        dispose(gExport)
         })
   }
   
