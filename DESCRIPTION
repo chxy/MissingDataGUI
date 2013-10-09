@@ -14,16 +14,16 @@ Description: This package provides numeric and graphical
     categorical variable.
 Depends:
     gWidgetsRGtk2,
-    Hmisc,
-    norm,
     GGally,
     ggplot2
 Imports:
     cairoDevice,
     grid,
-    plyr,
     reshape2,
-    reshape
+    Hmisc,
+    norm,
+    mice,
+    mi
 License: GPL
 Collate:
     'MissingDataGUI-package.r'

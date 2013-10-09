@@ -1,6 +1,6 @@
 exportPattern("^[^\\.]")
 importFrom(grid,viewport)
-importFrom(plyr,ddply)
 importFrom(reshape2,melt)
-importFrom(reshape,add.all.combinations)
+importFrom(mice,mice)
+importFrom(mi,mi)
 import(gWidgetsRGtk2,Hmisc,norm,GGally,	ggplot2)

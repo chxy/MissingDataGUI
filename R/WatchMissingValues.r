@@ -52,7 +52,6 @@ scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @importFrom reshape2 melt
-##' @importFrom reshape add.all.combinations
 ##' @importFrom grid viewport
 ##' @examples
 ##' if(interactive()){
@@ -69,6 +68,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   }
   
   m = new.env()
+  m$group151 = m$glay151 = list()
   
   if (is.null(data)) {
     if (length(svalue(gt)) == 0) {
@@ -362,9 +362,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   #####----------------------------#####
   Graph = function(h,...) {
     graphics.off()
-    glay15[1,1,expand=TRUE] = gnotebook(container = glay15, expand=TRUE)
-    l = length(glay15[1,1])
-    if (l>0) for (i in 1:l) dispose(glay15[1,1])
+    
+    if (!exists('k', envir = m)) m$k = 0
+    # l = length(glay15[1,1])
+    # if (l>0) for (i in 1:l) dispose(glay15[1,1])
     
     initializ()
     if(initial_plot()) return()
@@ -375,16 +376,15 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         lab = names(m$dat); k = length(m$dat)
     }
     
-    group151 = glay151 = list()
     for (j in 1:k) {
-        group151[[j]] = ggroup(container = glay15[1,1], label = lab[j], expand = TRUE, horizontal = FALSE)
-        glay151[[j]] = glayout(container = group151[[j]], expand = TRUE, use.scrollwindow = TRUE)
+        m$group151[[j+m$k]] = ggroup(container = glay15[1,1], label = lab[j], expand = TRUE, horizontal = FALSE)
+        m$glay151[[j+m$k]] = glayout(container = m$group151[[j+m$k]], expand = TRUE, use.scrollwindow = TRUE)
     }
     
     if (m$graphtype=="Histogram/Barchart") {
       for (j in 1:k) {
           for (i in 1:m$n) {
-              glay151[[j]][i, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+              m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
               graph_hist(j, i, "stack")
           }
       }
@@ -392,35 +392,36 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     if (m$graphtype=="Spinogram/Spineplot") {
         for (j in 1:k) {
             for (i in 1:m$n) {
-                glay151[[j]][i, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+                m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
                 graph_hist(j, i, "fill")
             }
         }
     }
     if (m$graphtype=="Pairwise Plots") {
         for (j in 1:k) {
-            glay151[[j]][1, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+            m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
             graph_pair(j, 'bottom')
         }
     }
     if (m$graphtype=="Parallel Coordinates") {
         for (j in 1:k) {
             if (!graph_pcp(j)) {
-                glay151[[j]][1, 1, expand = TRUE] = ggraphics(container = glay151[[j]], expand = TRUE)
+                m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
                 print(m$p+theme(legend.position='bottom'))
             }
         }
     }
     if (m$graphtype=="Missingness Map"){
         q = graph_map()
-        glay151[[1]][1, 1, expand = TRUE] = ggraphics(container = glay151[[1]], expand = TRUE)
+        m$glay151[[1+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]], expand = TRUE)
         print(q$q1)
-        glay151[[1]][2, 1, expand = TRUE] = ggraphics(container = glay151[[1]], expand = TRUE)
+        m$glay151[[1+m$k]][2, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]], expand = TRUE)
         print(q$q2)
-        glay151[[1]][3, 1, expand = TRUE] = ggraphics(container = glay151[[1]], expand = TRUE)
+        m$glay151[[1+m$k]][3, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]], expand = TRUE)
         print(q$q3)
     }
-    svalue(glay15[1,1])=1
+    # svalue(glay15[1,1])=1
+    m$k = m$k + k
   }
   
   #####---------------------------------#####
@@ -613,7 +614,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   radio125 = gtable(tmpcolorby, container=group14, expand=TRUE, multiple=TRUE)
   addHandlerKeystroke(radio125, handler = function(h,...){})
   gframe142 = gframe(text = "Imputation Method", container = group14)
-  gr142 = gradio(c('Below 10%','Simple','Hot-deck','MI:pmm',
+  gr142 = gradio(c('Below 10%','Simple','Hot-deck','MI:areg',
                    'MI:norm','MI:mice','MI:mi'),
                  container = gframe142, handler = function(h,...){
                    if (svalue(gr142)=='Below 10%') {
@@ -642,6 +643,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group15 = ggroup(horizontal = FALSE, container = group13,
                    expand = TRUE, use.scrollwindow = TRUE)
   glay15 = glayout(container = group15, expand = TRUE, use.scrollwindow = TRUE)
+  glay15[1,1,expand=TRUE] = gnotebook(container = glay15, closebuttons =TRUE, expand=TRUE)
  
   #####------------------------------------------------#####
   ##  In the second tab we can:                           ##
@@ -682,9 +684,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   
   gframe242 = gframe(text = "Imputation Method", container = group24)
   help_methods = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create two tabs: Median and Mean/Mode. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical.\n\n      (3) 'Hot-deck' contains two methods: 'Random Value' and 'Nearest Neighbor'. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. 'Nearest neighbor' will replace the NA's by the mean of five nearest neighbors. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n     (4) 'MI:pmm' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create two tabs: Median and Mean/Mode. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical.\n\n      (3) 'Hot-deck' contains two methods: 'Random Value' and 'Nearest Neighbor'. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. 'Nearest neighbor' will replace the NA's by the mean of five nearest neighbors. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n     (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
   }
-  gr242 = gradio(c('Below 10%','Simple','Hot-deck','MI:pmm',
+  gr242 = gradio(c('Below 10%','Simple','Hot-deck','MI:areg',
                    'MI:norm','MI:mice','MI:mi'),
                  container = gframe242, handler = help_methods)
   addHandlerMouseMotion(gr242, handler = help_methods)
