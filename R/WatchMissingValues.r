@@ -361,7 +361,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ##  (gbutton: Watch the data)       ##
   #####----------------------------#####
   Graph = function(h,...) {
-    graphics.off()
+    # graphics.off()
     
     if (!exists('k', envir = m)) m$k = 0
     # l = length(glay15[1,1])
