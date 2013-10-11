@@ -62,12 +62,14 @@
 ##' shadow matrix.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @importFrom mice mice
+##' @importFrom mice mice.impute.pmm
 ##' @importFrom mi mi
+##' @importFrom arm bayesglm
 imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_var=NULL,loop=NULL){
     if (is.null(origdata)) return(NULL)
     row_NO = if (is.null(row_var)) {1:nrow(origdata)} else {origdata[,row_var]}
     cond = if (is.null(loop)) {NULL} else {origdata[,loop,drop=FALSE]}
-    origdata = origdata[,setdiff(colnames(origdata),c(row_var,loop))]
+    origdata = origdata[,setdiff(colnames(origdata),c(row_var,loop)),drop=FALSE]
     n=ncol(origdata)
     if (n==1 && substr(method,1,3) == 'MI:'){
         gmessage('You only selected one variable. Cannot apply the multiple imputation.', icon = "error")
@@ -92,7 +94,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
     }
 
     dat = list(d1=origdata)
-    origshadow = is.na(origdata[,1:n])
+    origshadow = is.na(origdata[,1:n,drop=FALSE])
     if (method == 'Below 10%') {
         for (i in 1:n) {
             if (vartype[i] %in% c('integer','numeric','logical') &
