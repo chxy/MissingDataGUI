@@ -105,14 +105,10 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
             if (vartype[i] == "character") {
                 dat$d1[origshadow[,i],i] = 'NAN'
             }
-            if (vartype[i] == "factor" &
+            if (vartype[i] %in% c("factor","ordered") &&
                     as.numeric(as.character(missingpct))[i]<1 & as.numeric(as.character(missingpct))[i]>0) {
                 dat$d1[,i]=factor(dat$d1[,i],levels = c('NAN',levels(factor(dat$d1[,i]))))
                 dat$d1[origshadow[,i],i] = 'NAN'
-            }
-            if (vartype[i] == "factor" &
-                    as.numeric(as.character(missingpct))[i]==0) {
-                dat$d1[,i]=factor(dat$d1[,i])
             }
         }
         names(dat)="Below 10%"
@@ -161,7 +157,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
         }
     }
     else if (method == 'MI:norm') {
-        if (any(c('factor','character') %in% vartype)) {
+        if (any(c('factor','character','ordered') %in% vartype)) {
             gmessage("Not every variable is numeric. Cannot impute missing values under the multivariate normal model.", icon = "error")
             return(NULL)
         } else {
@@ -187,7 +183,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
             dat$d3=dat$d2=dat$d1
             formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
             set.seed(1234567)
-            f = Hmisc::aregImpute(formula0, data=origdata, n.impute=3)
+            f = aregImpute(formula0, data=origdata, n.impute=3)
             tmpres = f$imputed
             for (i in which(!sapply(tmpres,is.null))) {
                 dat$d1[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]

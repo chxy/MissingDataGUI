@@ -84,7 +84,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   rows = nrow(dataset)
   cols = ncol(dataset)
   halfcol = as.integer(cols/2)
-  dataclass = as.character(sapply(dataset, class))
+  dataclass = as.character(sapply(dataset, function(x) class(x)[1]))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
   
   if (sum(vNApct)==0) {
@@ -114,9 +114,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     }
   } else {is_imputed_data = FALSE}
   vname = as.character(names(dataset))
-  dataclass = as.character(sapply(dataset, class))
+  dataclass = as.character(sapply(dataset, function(x) class(x)[1]))
   NAcol = which(sapply(dataset, function(avec){all(is.na(avec))}))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
+  m$dataset = dataset
   
   #####------------------------------------#####
   ##  Graph and SavePlot share too much code  ##
@@ -155,7 +156,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       } else if (m$graphtype=="Missingness Map") return(FALSE)
       
       if ( (!exists('imp_dat',envir=m))  || m$graphtype!="Below 10%" ) {
-          m$dat = imputation(origdata=dataset[,c(gt11[m$name_select,2],m$cond),drop=FALSE],
+          m$dat = imputation(origdata=m$dataset[,c(gt11[m$name_select,2],m$cond),drop=FALSE],
                            method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                            missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                            condition=m$cond)
@@ -172,12 +173,12 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       }
       
       if (m$colorby=='Missing on Selected Variables') {
-          Missing <- !complete.cases(dataset[,gt11[m$name_select,2]])
+          Missing <- !complete.cases(m$dataset[,gt11[m$name_select,2]])
       } else {
           if (m$colorby=='Missing Any Variables') {
-              Missing <- !complete.cases(dataset)
+              Missing <- !complete.cases(m$dataset)
           } else {
-              Missing <- !complete.cases(dataset[,m$colorby])
+              Missing <- !complete.cases(m$dataset[,m$colorby])
           }
       }
       m$Missing <- Missing[m$dat[[1]][,ncol(m$dat[[1]])]]
@@ -228,7 +229,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       return(FALSE)
   }
   graph_map = function(){
-      Mapdat=data.frame(is.na(dataset[,gt11[m$name_select,2]]))
+      Mapdat=data.frame(is.na(m$dataset[,gt11[m$name_select,2]]))
       Mapdat$observation=1:nrow(Mapdat)
       mapdat=melt(Mapdat,"observation")
       colnames(mapdat)[3]="Missing"
@@ -278,23 +279,79 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     
     gt11input2 = ggroup(container = gt11input0, expand = TRUE)
     gt11input21 = glabel("Class:", container = gt11input2)
-    gt11input22 = gcombobox(union(gt11[svalue(gt11, index = TRUE),
-                                       3], c("integer", "numeric", "character", "factor")),
+    gt11input22 = gcombobox(union(gt11[svalue(gt11, index = TRUE),3], 
+                            c("integer", "numeric", "logical", "character", "factor", "ordered")),
                             container = gt11input2, expand = TRUE)
     
     gt11input3 = ggroup(container = gt11input0, expand = TRUE)
     gt11input31 = gbutton("Ok", container = gt11input3, expand = TRUE,
                           handler = function(h, ...) {
                             if (svalue(gt11input12) != "") {
-                              colnames(dataset)[colnames(dataset)==as.character(gt11[svalue(gt11, index = TRUE), 2])] <<- svalue(gt11input12)
+                              idx = svalue(gt11, index = TRUE)
+                              colnames(m$dataset)[colnames(m$dataset)==as.character(gt11[idx, 2])] = svalue(gt11input12)
                               tmpcolorby = radio125[,]
-                              tmpcolorby[tmpcolorby==as.character(gt11[svalue(gt11, index = TRUE), 2])]=svalue(gt11input12)
-                              gt11[svalue(gt11, index = TRUE), 2] = svalue(gt11input12)
+                              tmpcolorby[tmpcolorby==as.character(gt11[idx, 2])]=svalue(gt11input12)
+                              gt11[idx, 2] = svalue(gt11input12)
+                              if (svalue(gt11input22) == 'logical') {
+                                  if (all(as.character(m$dataset[,idx]) 
+                                          %in% c('0','1','FALSE','TRUE',NA))) {
+                                      m$dataset[,idx] = as.logical(as.character(m$dataset[,idx]))
+                                  } else {
+                                      gmessage("It cannot be converted to a logical variable.")
+                                      svalue(gt11input22) = gt11[idx, 3]
+                                  }
+                              }
+                              if (svalue(gt11input22) == 'numeric') { 
+                                  if (any(tryCatch(as.numeric(as.character(m$dataset[,idx])), warning=function(w){return('warning')})=="warning")) {
+                                      gmessage("It cannot be converted to a numeric variable.")
+                                      svalue(gt11input22) = gt11[idx, 3]
+                                  } else {
+                                      m$dataset[,idx] = as.numeric(as.character(m$dataset[,idx]))
+                                  }
+                              }
+                              if (svalue(gt11input22) == 'integer') {
+                                  if (any(tryCatch(as.integer(as.character(m$dataset[,idx])), warning=function(w){return('warning')})=="warning")) {
+                                      gmessage("It cannot be converted to an integer variable.")
+                                      svalue(gt11input22) = gt11[idx, 3]
+                                  } else {
+                                      m$dataset[,idx] = as.integer(as.character(m$dataset[,idx]))
+                                  }
+                              }
+                              if (svalue(gt11input22) == 'character') {
+                                  m$dataset[,idx] = as.character(m$dataset[,idx])
+                              }
+                              if (svalue(gt11input22) == 'factor') {
+                                  m$dataset[,idx] = factor(as.character(m$dataset[,idx]))
+                              }
+                              if (svalue(gt11input22) == 'ordered') {
+                                  m$dataset[,idx] = if (!is.factor(m$dataset[,idx])) {ordered(as.character(m$dataset[,idx]))} else {ordered(m$dataset[,idx])}
+                                  lev = levels(m$dataset[,idx])
+                                  gt11input31level = gwindow('Levels',visible = T, height=300, parent = gt11input)
+                                  gt11input31level0 = ggroup(horizontal = FALSE, container = gt11input31level, expand = TRUE)
+                                  gt11input31level1 = glabel("The current levels are:", container=gt11input31level0)
+                                  gt11input31level2 = gdf(data.frame(level=lev),name="",container=gt11input31level0, expand=TRUE)
+                                  gt11input31level3 = glabel("Redefine the order of the levels:", container=gt11input31level0)
+                                  gt11input31level4 = ggroup(horizontal = TRUE, container = gt11input31level0)
+                                  gt11input31level41 = glabel("levels =", container = gt11input31level4)
+                                  gt11input31level42 = gtext(text=sprintf("c(%s)",paste(1:length(lev),collapse=',')),container=gt11input31level4, height = 20, width = 200)
+                                  gt11input31level5 = ggroup(horizontal = TRUE, container = gt11input31level0)
+                                  gt11input31level51 = gbutton("Execute", container = gt11input31level5, expand = TRUE, handler = function(h, ...){
+                                      neworder = eval(parse(text=svalue(gt11input31level42)))
+                                      if (all(sort(neworder)==1:length(lev))) {
+                                          levels(m$dataset[,idx])=levels(m$dataset[,idx])[neworder]
+                                      } else {
+                                          gmessage('Your input cannot be recognized.')
+                                      }
+                                      dispose(gt11input31level)
+                                  })
+                                  gt11input31level52 = gbutton("Cancel", container = gt11input31level5, expand = TRUE, handler = function(h, ...) {
+                                      dispose(gt11input31level)
+                                  })
+                              }
                               gt11[svalue(gt11, index = TRUE), 3] = svalue(gt11input22)
-                              check123[,] = gt11[gt11[,3] %in%
-                                c('factor','logical','character'),2]
+                              check123[,] = gt11[gt11[,3] %in% c('factor','logical','character'),2]
                               radio125[,] = tmpcolorby
-                              dispose(gt11input)
+                              #dispose(gt11input)
                             }
                             else {
                               gmessage("Variable name could not be empty!")
@@ -318,15 +375,15 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         n = nrow(gt11)
         name_select = 1:n
     }
-    tmp = dataset[,gt11[name_select,2],drop=FALSE]
+    tmp = m$dataset[,gt11[name_select,2],drop=FALSE]
     cond=check123[svalue(check123,index=T)]
     
     if (length(cond)==0) {
-        l = dataset[1,,drop=FALSE]
+        l = m$dataset[1,,drop=FALSE]
     } else {
-        l = unique(dataset[,cond,drop=FALSE])
+        l = unique(m$dataset[,cond,drop=FALSE])
         ml = apply(l,1,paste,collapse='--')
-        tmpid = apply(dataset[,cond,drop=FALSE],1,function(d){
+        tmpid = apply(m$dataset[,cond,drop=FALSE],1,function(d){
             which(ml == paste(unlist(d),collapse='--'))})
     }
     NumSumforMisVal = gwindow("Numeric Summary for Missing Values", visible = T,
@@ -441,20 +498,20 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
           gmessage("All variables are selected to export.")
       }
       
-      dat = imputation(origdata=dataset[,c(gt11[m$name_select,2],m$cond)],
+      dat = imputation(origdata=m$dataset[,c(gt11[m$name_select,2],m$cond)],
                        method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                        missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                        condition=m$cond)
       dat = lapply(dat, function(x) {
-          x = data.frame(x[,-ncol(x)],is.na(dataset[x[,ncol(x)],gt11[m$name_select,2]]))
+          x = data.frame(x[,-ncol(x)],is.na(m$dataset[x[,ncol(x)],gt11[m$name_select,2]]))
           colnames(x) = c(gt11[m$name_select,2],paste('Missing', gt11[m$name_select,2], sep='_'))
           return(x)
           })
       
       entire_dat = dat
       for (j in 1:length(dat)) {
-          entire_dat[[j]] = data.frame(dataset,is.na(dataset))
-          colnames(entire_dat[[j]])=c(colnames(dataset),paste('Missing',colnames(dataset),sep='_'))
+          entire_dat[[j]] = data.frame(m$dataset,is.na(m$dataset))
+          colnames(entire_dat[[j]])=c(colnames(m$dataset),paste('Missing',colnames(m$dataset),sep='_'))
           entire_dat[[j]][,colnames(dat[[j]][,1:(2*m$n)])] = dat[[j]][,1:(2*m$n)]
       }
     
@@ -463,7 +520,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
         opb = svalue(opb)
         if (opa=='All columns' && opb) return(entire_dat)
         if (opa=='Selected columns' && opb) return(dat)
-        if (opa=='All columns' && !opb) return(lapply(entire_dat, function(x) x[,1:ncol(dataset)]))
+        if (opa=='All columns' && !opb) return(lapply(entire_dat, function(x) x[,1:ncol(m$dataset)]))
         if (opa=='Selected columns' && !opb) return(lapply(dat, function(x) x[,1:m$n]))
     }
     
