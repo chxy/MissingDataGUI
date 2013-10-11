@@ -2,7 +2,7 @@ if(getRversion() >= '2.15.1') globalVariables(c("observation", "variable","Reord
 
 # Service the colorblind
 # http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
-cbPalette = c("#E69F00", "#56B4E9", "#009E73", "#000000")
+cbPalette = c("#56B4E9", "#E69F00", "#009E73", "#000000")
 scale_colour_discrete = function(...) scale_colour_manual(values=cbPalette)
 scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
 # ColorBrewer2.org
@@ -204,13 +204,14 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
           m$n = 5
       }
       dat = m$dat[[j]]
+      dat = dat[order(m$Missing),]
       if (m$n==2) {
-          Missing=factor(m$Missing)
+          Missing=factor(m$Missing)[order(m$Missing)]          
           print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
                       size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) + 
                     theme(legend.position=legend.pos))
       } else {
-          dat$Missings=factor(m$Missing)
+          dat$Missings=factor(m$Missing)[order(m$Missing)]
           print(ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous='density',combo='box',discrete='facetbar')))
       }
   }
@@ -222,6 +223,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       }
       dat = m$dat[[j]]
       dat$Missing = m$Missing
+      dat = dat[order(dat$Missing),]
       m$p = ggparcoord(dat,1:m$n,groupColumn='Missing',scale='uniminmax')
       return(FALSE)
   }
