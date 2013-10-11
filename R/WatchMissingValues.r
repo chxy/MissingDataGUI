@@ -189,10 +189,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       tmpdat = data.frame(dat,Missing=m$Missing)
       p=qplot(tmpdat[,i],data=tmpdat,geom='histogram',fill=Missing,
               position=pos, xlab=names(tmpdat)[i])
-      if (is.numeric(dat[,i])) print(p)
-      if (is.character(dat[,i])) print(p+coord_flip())
+      if (is.numeric(dat[,i])) suppressMessages(print(p))
+      if (is.character(dat[,i])) suppressMessages(print(p+coord_flip()))
       if (is.factor(dat[,i]) &
-          as.numeric(as.character(gt11[m$name_select,4]))[i]<1) print(p+coord_flip())
+          as.numeric(as.character(gt11[m$name_select,4]))[i]<1) suppressMessages(print(p+coord_flip()))
   }
   graph_pair = function(j, legend.pos){
       if (m$n < 2) {
