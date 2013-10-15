@@ -690,9 +690,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                   handler = NumSmry)
   gb144 = gbutton("P l o t", container = group144,
                   handler = Graph)
-  gb146 = gbutton('Export the data', container = group144,
+  gb146 = gbutton('Export data', container = group144,
                   handler = ExportData)
-  gb148 = gbutton('Save the plot', container = group144,
+  gb148 = gbutton('Save plot', container = group144,
                   handler = SavePlot)
   gb147 = gbutton('Q u i t', container = group144,
                   handler = function(h,...){
@@ -775,13 +775,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   help_export = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   Users could name the exported data, and the information of imputation method will be completed in the file name automatically.\n\n   Two file formats are provided: csv and rda. For both formats, the number of columns in the exported data depends on the demand of users. There are 2*n columns if the user selected n variables. The first n columns are the imputed data, and the second n columns are the 'shadow matrix' which indicate whether the values are missing or not in the original dataset."))
   }
-  gb246 = gbutton('Export the data', container = group244, handler = help_export)
+  gb246 = gbutton('Export data', container = group244, handler = help_export)
   addHandlerMouseMotion(gb246, handler = help_export)
   
   help_save = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will save the plot(s) to png file(s) based on the options the user chooses.\n\n   A user can define the file name for the plot, and the graph type will be suffixed automatically."))
   }
-  gb248 = gbutton('Save the plot', container = group244, handler = help_save)
+  gb248 = gbutton('Save plot', container = group244, handler = help_save)
   addHandlerMouseMotion(gb248, handler = help_save)
   
   help_quit = function(h,...){
