@@ -28,3 +28,18 @@ compute_missing_pct = function(dat){
     return(list(missingsummary=missingsummary,totalmissingpct=totalmissingpct,
                 varmissingpct=varmissingpct,casemissingpct=casemissingpct))
 }
+
+
+mice_default = function(vec, dat){
+    res = vec
+    res[res %in% c("integer","numeric")] = "pmm"
+    res[res == "logical"] = "logreg"
+    for (i in which(vec %in% c('factor','character','ordered'))) {
+        s = length(unique(na.omit(dat[,i])))
+        if (s<3) {res[i] = "logreg"} else {
+            res[i] = if (vec[i] == "ordered") {"polr"} else {"polyreg"}
+        }
+    }
+    res[colSums(is.na(dat))==0] = ""
+    return(res)
+}
