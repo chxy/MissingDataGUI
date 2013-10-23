@@ -302,7 +302,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                                   }
                               }
                               if (svalue(gt11input22) == 'numeric') { 
-                                  if (any(tryCatch(as.numeric(as.character(m$dataset[,idx])), warning=function(w){return('warning')})=="warning")) {
+                                  if (any(tryCatch(na.omit(as.numeric(as.character(m$dataset[,idx]))), warning=function(w){return('warning')})=="warning")) {
                                       gmessage("It cannot be converted to a numeric variable.")
                                       svalue(gt11input22) = gt11[idx, 3]
                                   } else {
@@ -310,7 +310,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                                   }
                               }
                               if (svalue(gt11input22) == 'integer') {
-                                  if (any(tryCatch(as.integer(as.character(m$dataset[,idx])), warning=function(w){return('warning')})=="warning")) {
+                                  if (any(tryCatch(na.omit(as.integer(as.character(m$dataset[,idx]))), warning=function(w){return('warning')})=="warning")) {
                                       gmessage("It cannot be converted to an integer variable.")
                                       svalue(gt11input22) = gt11[idx, 3]
                                   } else {
@@ -343,15 +343,19 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                                           gmessage('Your input cannot be recognized.')
                                       }
                                       dispose(gt11input31level)
+                                      dispose(gt11input)
                                   })
                                   gt11input31level52 = gbutton("Cancel", container = gt11input31level5, expand = TRUE, handler = function(h, ...) {
                                       dispose(gt11input31level)
                                   })
                               }
                               gt11[svalue(gt11, index = TRUE), 3] = svalue(gt11input22)
-                              check123[,] = gt11[gt11[,3] %in% c('factor','logical','character'),2]
+                              check123[,] = gt11[gt11[,3] %in% c('factor','logical','character','ordered'),2]
                               radio125[,] = tmpcolorby
-                              #dispose(gt11input)
+                              gt21[,] = gt11[,]
+                              gt3421[,1:3] = gt11[,1:3]
+                              gt3421[,4] = mice_default(gt11[,3],dataset[,gt11[,1]])
+                              if (svalue(gt11input22) != 'ordered') dispose(gt11input)
                             }
                             else {
                               gmessage("Variable name could not be empty!")
@@ -361,6 +365,28 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
     gt11input32 = gbutton("Cancel", container = gt11input3,
                           expand = TRUE, handler = function(h, ...) {
                             dispose(gt11input)
+                          })
+  }
+  
+  #####----------------------------------------------------#####
+  ##  miceMethod is the handler when double clicking gt3421.  ##
+  ##  It gives a new window for                               ##
+  ##          editing the mice methods of variables.          ##
+  #####----------------------------------------------------#####
+  miceMethod = function(h, ...) {
+    gt34input = gwindow("mice methods", visible = T, width = 300,
+                        height = 200, parent = combo1)
+    gt34input0 = ggroup(horizontal = FALSE, container = gt34input,
+                        expand = TRUE)
+    gt34input1 = ggroup(container = gt34input0, expand = TRUE, horizontal=FALSE)
+    gt34input11 = glabel(paste("Name:",svalue(gt3421),"\n Class:",gt3421[svalue(gt3421, index = TRUE),3]), container = gt34input1)
+    
+    gt34input2 = ggroup(container = gt34input0, expand = TRUE)
+    gt34input21 = gbutton("Ok", container = gt34input2, expand = TRUE,
+                          handler = function(h, ...) {})
+    gt34input22 = gbutton("Cancel", container = gt34input2,
+                          expand = TRUE, handler = function(h, ...) {
+                            dispose(gt34input)
                           })
   }
   
@@ -795,6 +821,40 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                    expand = TRUE, use.scrollwindow = TRUE)
   text25 = gtext(container = group25, expand = TRUE,
                  use.scrollwindow = TRUE, font.attr=c(family="monospace"))
+  
+  #####------------------------------------------------#####
+  ##  In the third tab we can:                            ##
+  ##  (1) Change the default settings of the methods.     ##
+  #####------------------------------------------------#####
+  group31 = ggroup(container = tab, label = "Settings", expand = TRUE, horizontal=FALSE)
+  group32 = glayout(container = group31, expand = TRUE, spacing = 10)
+  
+  group32[1,1] = gframe(text = "Multiple imputation", 
+                    container = group32, horizontal=FALSE)
+  size(group32[1,1]) = c(500,100)
+  group3211 = ggroup(container = group32[1,1])
+  label32111 = glabel(text="Number of imputed sets :  ", container=group3211)
+  text32112 = gedit(text="3", container=group3211, width=15)
+  group3212 = ggroup(container = group32[1,1])
+  label32121 = glabel(text="Random number seed :  ", container=group3212)
+  text32122 = gedit(text="1234567", container=group3212, width=15)
+  
+  group32[1,2] = gframe(text = "Hot-deck: nearest neighbor", 
+                    container = group32, horizontal=FALSE)
+  size(group32[1,2]) = c(500,100)
+  group3221 = ggroup(container = group32[1,2])
+  label32211 = glabel(text="Number of neighbors :  ", container=group3221)
+  text32212 = gedit(text="5", container=group3221, width=15)
+  
+  group32[2,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
+  frame342 = gframe(text = "MI:mice", container = group32[2,1], horizontal=FALSE)
+  size(frame342) = c(500,600)
+  
+  miceSettings = data.frame(nametable[,1:3], method=mice_default(as.character(dataclass),dataset),
+                         stringsAsFactors=FALSE)
+  gt3421 = gtable(miceSettings, multiple = T, container = frame342, expand = FALSE, chosencol = 2)
+  size(gt3421) = c(300,500)
+  addhandlerdoubleclick(gt3421, handler = miceMethod)
   
   svalue(tab)=1
 }
