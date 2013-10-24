@@ -142,6 +142,25 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
               }
           }
       }
+      m$mi_n=svalue(text32112)
+      if (is.na(m$mi_n)) {
+        m$mi_n=3
+        message("Number of imputation sets is set to 3.")
+        svalue(text32112)=3
+      }
+      m$mi_seed=svalue(text32122)
+      if (is.na(m$mi_seed)) {
+        m$mi_seed=1234567
+        message("Random number seed is set to 1234567.")
+        svalue(text32122)=1234567
+      }
+      m$nn_k=svalue(text32212)
+      if (is.na(m$nn_k)) {
+        m$nn_k=5
+        message("Number of the nearest neighbors is set to 5.")
+        svalue(text32212)=5
+      }
+      m$mice_method=gt3421[m$name_select,4]
   }
   initial_plot = function(){
       if (m$n == 0) {
@@ -159,7 +178,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
           m$dat = imputation(origdata=m$dataset[,c(gt11[m$name_select,2],m$cond),drop=FALSE],
                            method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                            missingpct=as.numeric(as.character(gt11[m$name_select,4])),
-                           condition=m$cond)
+                           condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
           if (all(sapply(m$dat,nrow)==0)) return(TRUE)
           for (j in 1:length(m$dat)) colnames(m$dat[[j]])[1:m$n]=c(gt11[m$name_select,2])
       } else {
@@ -274,8 +293,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
                         expand = TRUE)
     gt11input1 = ggroup(container = gt11input0, expand = TRUE)
     gt11input11 = glabel("Name:", container = gt11input1)
-    gt11input12 = gedit(text = svalue(gt11), container = gt11input1,
-                        expand = TRUE)
+    gt11input12 = gedit(text = svalue(gt11), container = gt11input1, expand = TRUE)
     
     gt11input2 = ggroup(container = gt11input0, expand = TRUE)
     gt11input21 = glabel("Class:", container = gt11input2)
@@ -374,20 +392,32 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   ##          editing the mice methods of variables.          ##
   #####----------------------------------------------------#####
   miceMethod = function(h, ...) {
+    k = svalue(gt3421, index = TRUE)
+    if (gt3421[k,4] == '') return()
     gt34input = gwindow("mice methods", visible = T, width = 300,
                         height = 200, parent = combo1)
     gt34input0 = ggroup(horizontal = FALSE, container = gt34input,
                         expand = TRUE)
     gt34input1 = ggroup(container = gt34input0, expand = TRUE, horizontal=FALSE)
-    gt34input11 = glabel(paste("Name:",svalue(gt3421),"\n Class:",gt3421[svalue(gt3421, index = TRUE),3]), container = gt34input1)
+    
+    gt34input11 = glabel(paste("Name:",gt3421[k,2],"\nClass:",gt3421[k,3],"\nMethod for mice imputation:"), container = gt34input1)
+    possible_methods = list(numeric=c('pmm','norm','norm.nob','norm.boot','norm.predict','mean','2l.norm','2l.pan','2lonly.mean','2lonly.norm','2lonly.pmm','quadratic','cart','ri','sample'),
+                            level2=c('pmm','2lonly.pmm','logreg','logreg.boot','cart','sample'),
+                            factor3=c('pmm','2lonly.pmm','polyreg','lda','cart','sample'),
+                            ordered3=c('pmm','2lonly.pmm','polr','cart','sample'))
+    s1 = mice_default(gt3421[k,3], dataset[,gt3421[k,1],drop=FALSE])
+    s2 = switch(s1,'pmm'=1,'logreg'=2,'polyreg'=3,'polr'=4)
+    valid_methods = union(gt3421[k,4], possible_methods[[s2]])
+    gt34input12 = gcombobox(valid_methods, container = gt34input1, expand = TRUE)
     
     gt34input2 = ggroup(container = gt34input0, expand = TRUE)
     gt34input21 = gbutton("Ok", container = gt34input2, expand = TRUE,
-                          handler = function(h, ...) {})
-    gt34input22 = gbutton("Cancel", container = gt34input2,
-                          expand = TRUE, handler = function(h, ...) {
+                          handler = function(h, ...) {
+                            gt3421[k,4]=svalue(gt34input12)
                             dispose(gt34input)
-                          })
+                            })
+    gt34input22 = gbutton("Cancel", container = gt34input2, expand = TRUE,
+                          handler = function(h, ...) {dispose(gt34input)})
   }
   
   #####------------------------------#####
@@ -527,7 +557,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
       dat = imputation(origdata=m$dataset[,c(gt11[m$name_select,2],m$cond)],
                        method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                        missingpct=as.numeric(as.character(gt11[m$name_select,4])),
-                       condition=m$cond)
+                       condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
       dat = lapply(dat, function(x) {
           x = data.frame(x[,-ncol(x)],is.na(m$dataset[x[,ncol(x)],gt11[m$name_select,2]]))
           colnames(x) = c(gt11[m$name_select,2],paste('Missing', gt11[m$name_select,2], sep='_'))
@@ -834,23 +864,23 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   size(group32[1,1]) = c(500,100)
   group3211 = ggroup(container = group32[1,1])
   label32111 = glabel(text="Number of imputed sets :  ", container=group3211)
-  text32112 = gedit(text="3", container=group3211, width=15)
+  text32112 = gedit(text="3", container=group3211, width=15, coerce.with=as.integer)
   group3212 = ggroup(container = group32[1,1])
   label32121 = glabel(text="Random number seed :  ", container=group3212)
-  text32122 = gedit(text="1234567", container=group3212, width=15)
+  text32122 = gedit(text="1234567", container=group3212, width=15, coerce.with=as.integer)
   
   group32[1,2] = gframe(text = "Hot-deck: nearest neighbor", 
                     container = group32, horizontal=FALSE)
   size(group32[1,2]) = c(500,100)
   group3221 = ggroup(container = group32[1,2])
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
-  text32212 = gedit(text="5", container=group3221, width=15)
+  text32212 = gedit(text="5", container=group3221, width=15, coerce.with=as.integer)
   
   group32[2,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
   frame342 = gframe(text = "MI:mice", container = group32[2,1], horizontal=FALSE)
   size(frame342) = c(500,600)
   
-  miceSettings = data.frame(nametable[,1:3], method=mice_default(as.character(dataclass),dataset),
+  miceSettings = data.frame(nametable[,1:3], Method=mice_default(as.character(dataclass),dataset),
                          stringsAsFactors=FALSE)
   gt3421 = gtable(miceSettings, multiple = T, container = frame342, expand = FALSE, chosencol = 2)
   size(gt3421) = c(300,500)

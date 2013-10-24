@@ -52,6 +52,9 @@
 ##' imputation is implemented in each group. There are no missing
 ##' values in those variables. If it is null, then there is no
 ##' division. The imputation is based on the whole dataset.
+##' @param knn number of the nearest neighbors
+##' @param mi.n number of the imputation sets for multiple imputation
+##' @param mi.seed random number seed for multiple imputation
 ##' @param row_var A column name (character) that defines the ID of rows.
 ##' @param loop if it is in an internal loop by the conditional variables,
 ##' then loop=condtion.
@@ -65,7 +68,7 @@
 ##' @importFrom mice mice.impute.pmm
 ##' @importFrom mi mi
 ##' @importFrom arm bayesglm
-imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_var=NULL,loop=NULL){
+imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL,loop=NULL){
     if (is.null(origdata)) return(NULL)
     row_NO = if (is.null(row_var)) {1:nrow(origdata)} else {origdata[,row_var]}
     cond = if (is.null(loop)) {NULL} else {origdata[,loop,drop=FALSE]}
@@ -147,7 +150,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
                     NNdat = CmpltDat
                     a = rbind(dat$d2[i,], NNdat)[,usecol]
                     NNdat$distance = dist(a)[1:nrow(NNdat)]
-                    k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(5,nrow(NNdat)),]
+                    k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(knn,nrow(NNdat)),]
                     dat$d2[i,-usecol] = colMeans(k5NNdat[,1:n][,-usecol,drop=FALSE])
                 } else {
                     dat$d2[i,] = sapply(dat$d2, median, na.rm=TRUE)
@@ -161,18 +164,17 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
             gmessage("Not every variable is numeric. Cannot impute missing values under the multivariate normal model.", icon = "error")
             return(NULL)
         } else {
-            dat$d3=dat$d2=dat$d1
-            s = prelim.norm(as.matrix(dat$d1))
+            s = prelim.norm(as.matrix(origdata))
             thetahat = em.norm(s)
-            rngseed(1234567)
-            dat$d1 = imp.norm(s,thetahat,as.matrix(dat$d1))
-            dat$d2 = imp.norm(s,thetahat,as.matrix(dat$d2))
-            dat$d3 = imp.norm(s,thetahat,as.matrix(dat$d3))
+            rngseed(mi.seed)
+            for (i in 1:mi.n){
+              dat[[i]] = imp.norm(s,thetahat,as.matrix(origdata))
+            }
+            names(dat)=paste('norm',1:mi.n)
             if (any(sapply(dat,function(x){any(c(Inf,NaN) %in% x)}))) {
                 gmessage("The algorithm doesn't converge. Return the original data with missing values.", icon = "warning")
-                dat = list(d1=origdata)
+                dat = list(original=origdata)
             }
-            names(dat)=paste('norm',1:3)
         }
     }
     else if (method == 'MI:areg') {
@@ -180,23 +182,23 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
             gmessage('All the observations have missing values. Cannot impute by Hmisc::aregImpute.', icon = "warning")
             return(NULL)
         } else {
-            dat$d3=dat$d2=dat$d1
             formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
-            set.seed(1234567)
-            f = aregImpute(formula0, data=origdata, n.impute=3)
+            set.seed(mi.seed)
+            f = aregImpute(formula0, data=origdata, n.impute=mi.n)
             tmpres = f$imputed
             for (i in which(!sapply(tmpres,is.null))) {
-                dat$d1[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
-                dat$d2[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,2]
-                dat$d3[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,3]
+              dat[[i]]=origdata
+              for (j in 1:mi.n){
+                dat[[j]][rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,j]
+              }
             }
-            names(dat)=paste('areg',1:3)
+            names(dat)=paste('areg',1:mi.n)
         }
     }
     else if (method == 'MI:mice') {
         dat$d3=dat$d2=dat$d1
         set.seed(1234567)
-        f = mice::mice(origdata, m=3, printFlag=FALSE)
+        f = mice::mice(origdata, m=mi.n, printFlag=FALSE, seed=mi.seed)
         tmpres = f$imp
         for (i in which(!sapply(tmpres,is.null))) {
             dat$d1[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
@@ -207,8 +209,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL,row_
     }
     else if (method == 'MI:mi') {
         dat$d3=dat$d2=dat$d1
-        set.seed(1234567)
-        f = mi::mi(origdata)
+        f = mi::mi(origdata, n.imp=mi.n, seed=mi.seed)
         tmpres = f@imp
         for (i in 1:length(tmpres[[1]])) {
             dat$d1[names(tmpres[[1]][[i]]@random),names(tmpres[[1]])[i]]=tmpres[[1]][[i]]@random
