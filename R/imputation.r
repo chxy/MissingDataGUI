@@ -196,25 +196,24 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn
         }
     }
     else if (method == 'MI:mice') {
-        dat$d3=dat$d2=dat$d1
-        set.seed(1234567)
         f = mice::mice(origdata, m=mi.n, printFlag=FALSE, seed=mi.seed)
         tmpres = f$imp
-        for (i in which(!sapply(tmpres,is.null))) {
-            dat$d1[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,1]
-            dat$d2[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,2]
-            dat$d3[rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,3]
+        for (j in 1:mi.n){
+          dat[[j]] = origdata
+          for (i in which(!sapply(tmpres,is.null))) {
+            dat[[j]][rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,j]
+          }
         }
-        names(dat)=paste('mice',1:3)
+        names(dat)=paste('mice',1:mi.n)
     }
     else if (method == 'MI:mi') {
-        dat$d3=dat$d2=dat$d1
         f = mi::mi(origdata, n.imp=mi.n, seed=mi.seed)
         tmpres = f@imp
-        for (i in 1:length(tmpres[[1]])) {
-            dat$d1[names(tmpres[[1]][[i]]@random),names(tmpres[[1]])[i]]=tmpres[[1]][[i]]@random
-            dat$d2[names(tmpres[[2]][[i]]@random),names(tmpres[[2]])[i]]=tmpres[[2]][[i]]@random
-            dat$d3[names(tmpres[[3]][[i]]@random),names(tmpres[[3]])[i]]=tmpres[[3]][[i]]@random
+        for (j in 1:mi.n){
+          dat[[j]] = origdata
+          for (i in 1:length(tmpres[[j]])) {
+            dat[[j]][names(tmpres[[j]][[i]]@random),names(tmpres[[j]])[i]]=tmpres[[j]][[i]]@random
+          }
         }
         names(dat)=paste('mi',1:3)
     }
