@@ -48,6 +48,10 @@ scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
 ##' GUI. If it is null, then parameter gt must not be null.
 ##' @param gt A widget created by gtable(). It should be passed from
 ##' \code{\link{MissingDataGUI}}.
+##' @param size.width the width of window. Default to be 1000, and the 
+##' minimal is 800.
+##' @param size.height the height of window. Default to be 750, and the
+##' minimal is 600.
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
@@ -61,7 +65,7 @@ scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
 ##' WatchMissingValues(data=brfss)
 ##' }
 ##'
-WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
+WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.height=750, ...){
   if (is.null(data) & is.null(gt)) {
     gmessage("There's no input.", icon="error")
     return()
@@ -692,7 +696,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   #####-------------------------------#####
   ##  New window for missing values      ##
   #####-------------------------------#####
-  combo1 <- gwindow("Missing Values", visible = T, width = 1000, height = 750)
+  size.width = round(max(c(size.width, 800)))
+  size.height = round(max(c(size.height, 600)))
+  if (size.height/size.width > 0.8) size.height = size.width * 0.8
+  if (size.width/size.height > 1.4) size.width = size.height * 1.4
+  combo1 <- gwindow("Missing Values", visible = T, width = size.width, height = size.height)
   tab <- gnotebook(container = combo1)
   
   #####------------------------------------------------#####
@@ -705,23 +713,23 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group1100 = ggroup(container = group11, expand = TRUE)
   group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = TRUE)
-  size(group12) = c(200,750)
+  size(group12) = round(c(200,750) / c(1000,750) * c(size.width,size.height))
   nametable = data.frame(Items=1:length(vname), Variables=as.character(vname),
                          Class=as.character(dataclass), NApct=as.character(round(vNApct,3)),
                          stringsAsFactors=FALSE)
   gt11 = gtable(nametable, multiple = T, container = group12,
                 expand = TRUE, chosencol = 2)
-  size(gt11) = c(150,600)
+  size(gt11) = round(c(150,600) / c(1000,750) * c(size.width,size.height))
   addhandlerdoubleclick(gt11, handler = VariableOptions)
   
   label121 = glabel('Categorical variables to condition on',container=group12)
   check123 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
     c('factor','logical','character')], container=group12, use.table=TRUE)
-  size(check123) = c(150,150)
+  size(check123) = round(c(150,200) / c(1000,750) * c(size.width,size.height))
   
   group13 = ggroup(horizontal = FALSE, container = group1100, expand = TRUE)
   group14 = ggroup(horizontal = TRUE, container = group13)
-  size(group14) = c(500,160)
+  size(group14) = c(round(0.55*size.width), 160)
   tmpcolorby = data.frame(`Color by the missing of`= c('Missing Any Variables',
                                                        'Missing on Selected Variables',
                                                        nametable[vNApct>0,2]))
@@ -768,10 +776,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group2100 = ggroup(container = group21, expand = TRUE)
   group22 = ggroup(container = group2100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = T)
-  size(group22) = c(200,750)
+  size(group22) = round(c(200,750) / c(1000,750) * c(size.width,size.height))
   gt21 = gtable(nametable, multiple = T, container = group22,
                 expand = TRUE, chosencol = 2)
-  size(gt21) = c(150,600)
+  size(gt21) = round(c(150,600) / c(1000,750) * c(size.width,size.height))
   addHandlerMouseMotion(gt21, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This table displays all variables in the data set and reports the type and the percentage of missing values for each variable.\n\n   We can sort the variables by NA's percent.\n\n   If we doubleclick one row, we can change the variable name, as well as the data type."))
 	})
@@ -780,7 +788,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   check223 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
                             c('factor','logical','character')], 
                             container=group22, use.table=TRUE)
-  size(check223) = c(150,150)
+  size(check223) = round(c(150,200) / c(1000,750) * c(size.width,size.height))
   addHandlerMouseMotion(check223, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all categorical variables. We can make multiple selection on them.\n\n   Once we select one or more variables, the data set will be divided into small groups based on the selected categorical variable(s).\n\n   And the imputation will be made in each group.\n\n   If the imputation method is 'Below 10%', then the selected conditioning variables are ignored."))
 	})
@@ -788,7 +796,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   group23 = ggroup(horizontal = FALSE, container = group2100,
                    expand = TRUE)
   group24 = ggroup(horizontal = TRUE, container = group23)
-  size(group24) = c(500,160)
+  size(group24) = c(round(0.55*size.width), 160)
   help_colorlist = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means whether this case being complete or not.\n\n   The first row 'Missing on Selected Variables' means whether the cases have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
   }
@@ -861,29 +869,29 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, ...){
   
   group32[1,1] = gframe(text = "Multiple imputation", 
                     container = group32, horizontal=FALSE)
-  size(group32[1,1]) = c(500,100)
+  size(group32[1,1]) = c(round(0.5 * size.width),100)
   group3211 = ggroup(container = group32[1,1])
   label32111 = glabel(text="Number of imputed sets :  ", container=group3211)
-  text32112 = gedit(text="3", container=group3211, width=15, coerce.with=as.integer)
+  text32112 = gedit(text="3", container=group3211, width=2, coerce.with=as.integer)
   group3212 = ggroup(container = group32[1,1])
   label32121 = glabel(text="Random number seed :  ", container=group3212)
-  text32122 = gedit(text="1234567", container=group3212, width=15, coerce.with=as.integer)
+  text32122 = gedit(text="1234567", container=group3212, width=8, coerce.with=as.integer)
   
   group32[1,2] = gframe(text = "Hot-deck: nearest neighbor", 
                     container = group32, horizontal=FALSE)
-  size(group32[1,2]) = c(500,100)
+  size(group32[1,2]) = c(round(0.5 * size.width),100)
   group3221 = ggroup(container = group32[1,2])
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
-  text32212 = gedit(text="5", container=group3221, width=15, coerce.with=as.integer)
+  text32212 = gedit(text="5", container=group3221, width=2, coerce.with=as.integer)
   
   group32[2,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
   frame342 = gframe(text = "MI:mice", container = group32[2,1], horizontal=FALSE)
-  size(frame342) = c(500,600)
+  size(frame342) = c(round(0.5 * size.width), size.height-100)
   
   miceSettings = data.frame(nametable[,1:3], Method=mice_default(as.character(dataclass),dataset),
                          stringsAsFactors=FALSE)
   gt3421 = gtable(miceSettings, multiple = T, container = frame342, expand = FALSE, chosencol = 2)
-  size(gt3421) = c(300,500)
+  size(gt3421) = c(round(0.45 * size.width), size.height-120)
   addhandlerdoubleclick(gt3421, handler = miceMethod)
   
   svalue(tab)=1

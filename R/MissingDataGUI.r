@@ -28,6 +28,10 @@
 ##' selected for the main GUI.
 ##' @param data A data frame which is shown in the main missing-data
 ##' GUI. If it is null, then the open-files GUI opens.
+##' @param width the width of window. Default to be 1000, and the 
+##' minimal is 800.
+##' @param height the height of window. Default to be 750, and the
+##' minimal is 600.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @examples
@@ -41,7 +45,7 @@
 ##' MissingDataGUI(brfss)
 ##' }
 ##'
-MissingDataGUI = function(data=NULL) {
+MissingDataGUI = function(data=NULL, width=1000, height=750) {
     if (is.null(data)) {
         combo0 = gwindow("Open A File...", visible = TRUE)
         group = ggroup(horizontal = FALSE, container = combo0)
@@ -51,7 +55,7 @@ MissingDataGUI = function(data=NULL) {
         gb2 = gbutton("Watch Missing Values", container = group,handler = function(h, ...) WatchMissingValues(h, data=NULL, gt=gt))
     } else {
         if (is.data.frame(data)) {
-            WatchMissingValues(data=data)
+            WatchMissingValues(data=data, size.width=width, size.height=height)
         } else {
             gmessage("Please use a data frame.")
             warning("The input needs to be a data frame.")
