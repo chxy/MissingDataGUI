@@ -164,7 +164,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         message("Number of the nearest neighbors is set to 5.")
         svalue(text32212)=5
       }
-      m$mice_method=gt3421[m$name_select,4]
+      if (m$imp_method == 'MI:mice') attr(m$imp_method,'method')=gt3421[m$name_select,4]
   }
   initial_plot = function(){
       if (m$n == 0) {

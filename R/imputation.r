@@ -196,7 +196,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn
         }
     }
     else if (method == 'MI:mice') {
-        f = mice::mice(origdata, m=mi.n, printFlag=FALSE, seed=mi.seed)
+        f = mice::mice(origdata, method=attr(method,'method'), m=mi.n, printFlag=FALSE, seed=mi.seed)
         tmpres = f$imp
         for (j in 1:mi.n){
           dat[[j]] = origdata
