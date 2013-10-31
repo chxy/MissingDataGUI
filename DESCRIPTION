@@ -25,6 +25,7 @@ Imports:
     mice,
     mi
 License: GPL
+LazyData: true
 Collate:
     'MissingDataGUI-package.r'
     'MissingDataGUI.r'
