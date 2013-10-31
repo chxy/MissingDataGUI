@@ -14,17 +14,19 @@ Description: This package provides numeric and graphical
     categorical variable.
 Depends:
     gWidgetsRGtk2,
-    GGally,
     ggplot2
 Imports:
+    GGally,
     cairoDevice,
     grid,
-    reshape2,
+    reshape,
+    reshape2
+Suggests:
     Hmisc,
     norm,
     mice,
     mi
-License: GPL
+License: GPL (>= 2.0)
 LazyData: true
 Collate:
     'MissingDataGUI-package.r'

@@ -44,8 +44,11 @@
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @import gWidgets Hmisc norm ggplot2
 ##' @importFrom reshape2 melt
 ##' @importFrom grid viewport
+##' @importFrom GGally ggpairs
+##' @importFrom GGally ggparcoord
 ##' @examples
 ##' if(interactive()){
 ##' data(tao)
