@@ -1,14 +1,3 @@
-if(getRversion() >= '2.15.1') globalVariables(c("observation", "variable","Reordered_Observation"))
-
-# Service the colorblind
-# http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
-cbPalette = c("#56B4E9", "#E69F00", "#009E73", "#000000")
-scale_colour_discrete = function(...) scale_colour_manual(values=cbPalette)
-scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
-# ColorBrewer2.org
-# scale_colour_discrete = function(...) scale_colour_brewer(..., type="qual",palette="Dark2")
-# scale_fill_discrete = function(...) scale_fill_brewer(..., type="qual",palette="Dark2")
-
 ##' The Main Window of Missing Data GUI.
 ##'
 ##' This function is to open the missing data GUI. The widgets shown

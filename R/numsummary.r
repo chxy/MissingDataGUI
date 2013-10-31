@@ -1,3 +1,32 @@
+if(getRversion() >= '2.15.1') globalVariables(c("observation", "variable","Reordered_Observation"))
+
+# Service the colorblind
+# http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/
+cbPalette = c("#56B4E9", "#E69F00", "#009E73", "#000000")
+scale_colour_discrete = function(...) scale_colour_manual(values=cbPalette)
+scale_fill_discrete = function(...) scale_fill_manual(values=cbPalette)
+# ColorBrewer2.org
+# scale_colour_discrete = function(...) scale_colour_brewer(..., type="qual",palette="Dark2")
+# scale_fill_discrete = function(...) scale_fill_brewer(..., type="qual",palette="Dark2")
+
+
+.onLoad = function(lib, pkg) {
+  options(guiToolkit = "RGtk2")
+  library_call('gWidgetsRGtk2')
+}
+
+library_call = function(pkg) {
+  library(pkg, character.only = TRUE)
+}
+
+library_gui = function(pkg) {
+  if (require(pkg)) return()
+  if (gconfirm(paste('Install the missing package ', pkg, '?', sep = ''))) {
+    install.packages(pkg)
+    library_call(pkg)
+  } else stop('The package ', pkg, ' is not available')
+}
+
 ##' Compute the numeric summary of the missingness
 ##' 
 ##' @param dat A data frame.
