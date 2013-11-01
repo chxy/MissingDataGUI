@@ -38,15 +38,14 @@
 ##' imputed. This data frame should be selected from the missing data
 ##' GUI.
 ##' @param method The imputation method selected from the missing data
-##' GUI. Must be one of 'Below 10%','Median','Mean','Random
-##' value','Regression','Nearest neighbor','Multiple
-##' Imputation','Mode'.
+##' GUI. Must be one of 'Below 10%','Simple','Hot-deck','MI:areg',
+##' 'MI:norm','MI:mice','MI:mi'.
 ##' @param vartype A vector of the classes of origdata. The length is
 ##' the same as the number of columns of origdata. The value should be
-##' from "integer", "numeric", "factor", and "character".
+##' from "integer", "numeric", "logical", "character", "factor", and "ordered".
 ##' @param missingpct A vector of the percentage of missings of the
 ##' variables in origdata. The length is the same as the number of
-##' columns of origdata. The value should be between 0 and 1.
+##' columns of origdata. The values should be between 0 and 1.
 ##' @param condition A vector of categorical variables. The dataset
 ##' will be partitioned based on those variables, and then the
 ##' imputation is implemented in each group. There are no missing
@@ -68,8 +67,10 @@
 ##' @importFrom mice mice.impute.pmm
 ##' @importFrom mi mi
 ##' @importFrom arm bayesglm
-imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL,loop=NULL){
+imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL,loop=NULL){
     if (is.null(origdata)) return(NULL)
+    if (is.null(vartype)) vartype=unname(sapply(origdata,function(x)class(x)[1]))
+    if (is.null(missingpct)) missingpct=unname(sapply(origdata,function(x)mean(is.na(x))))
     row_NO = if (is.null(row_var)) {1:nrow(origdata)} else {origdata[,row_var]}
     cond = if (is.null(loop)) {NULL} else {origdata[,loop,drop=FALSE]}
     origdata = origdata[,setdiff(colnames(origdata),c(row_var,loop)),drop=FALSE]
@@ -93,6 +94,7 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn
             }
             return(tmp)
         })
+        res = lapply(res,function(x)x[order(x$row_number),c(colnames(origdata),'row_number')])
         return(res)
     }
 
@@ -119,29 +121,34 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn
     else if (method == 'Simple') {
         dat$d2=dat$d1
         for (i in 1:n) {
-            dat$d1[,i] = as.numeric(impute(dat$d1[,i], fun=median))
             if (vartype[i] %in% c('integer','numeric')) {
-                dat$d2[,i] = as.numeric(impute(dat$d2[,i], fun=mean))
+                dat$d1[is.na(dat$d1[,i]),i] = median(dat$d1[,i], na.rm=TRUE)
+                dat$d2[is.na(dat$d2[,i]),i] = mean(dat$d2[,i], na.rm=TRUE)
             } else {
-                dat$d2[origshadow[,i],i] = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
+                biggroup = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
+                dat$d1[origshadow[,i],i] = biggroup
+                dat$d2[origshadow[,i],i] = biggroup
             }
         }
         names(dat)=c('Median','Mean/Mode')
     }
     else if (method == 'Hot-deck') {
+        set.seed(mi.seed)
         if (n==1 || sum(complete.cases(origdata))==0 || "character" %in% vartype) {
             if (n==1) warning_message='You only selected one variable. Cannot apply the nearest neighbor imputation. Only the random value imputation is given.'
             if (sum(complete.cases(origdata))==0) warning_message="All the observations have missing values. Cannot find the nearest neighbor."
             if ("character" %in% vartype) warning_message='Cannot impute the nearest neighbor with one or more character variables.'
             gmessage(warning_message, icon='warning')
             for (i in 1:n) {
-                dat$d1[,i] = as.numeric(impute(dat$d1[,i], fun='random'))
+              fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
+              dat$d1[origshadow[,i],i] = fill
             }
             names(dat)='Random Value'
         } else {
             dat$d2=dat$d1
             for (i in 1:n) {
-                dat$d1[,i] = as.numeric(impute(dat$d1[,i], fun='random'))
+              fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
+              dat$d1[origshadow[,i],i] = fill
             }
             CmpltDat = dat$d2[complete.cases(dat$d2),]
             for (i in which(!complete.cases(dat$d2))){
@@ -186,10 +193,11 @@ imputation = function(origdata, method, vartype, missingpct, condition=NULL, knn
             set.seed(mi.seed)
             f = aregImpute(formula0, data=origdata, n.impute=mi.n)
             tmpres = f$imputed
-            for (i in which(!sapply(tmpres,is.null))) {
+            tmpres = tmpres[!sapply(tmpres,is.null)]
+            for (i in 1:mi.n) {
               dat[[i]]=origdata
-              for (j in 1:mi.n){
-                dat[[j]][rownames(tmpres[[i]]),names(tmpres)[i]]=tmpres[[i]][,j]
+              for (j in 1:length(tmpres)){
+                dat[[i]][rownames(tmpres[[j]]),names(tmpres)[j]]=tmpres[[j]][,i]
               }
             }
             names(dat)=paste('areg',1:mi.n)
