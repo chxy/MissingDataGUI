@@ -861,7 +861,6 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   group32[1,1] = gframe(text = "Multiple imputation", 
                     container = group32, horizontal=FALSE)
-  size(group32[1,1]) = c(round(0.5 * size.width),100)
   group3211 = ggroup(container = group32[1,1])
   label32111 = glabel(text="Number of imputed sets :  ", container=group3211)
   text32112 = gedit(text="3", container=group3211, width=2, coerce.with=as.integer)
@@ -871,7 +870,6 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   group32[1,2] = gframe(text = "Hot-deck: nearest neighbor", 
                     container = group32, horizontal=FALSE)
-  size(group32[1,2]) = c(round(0.5 * size.width),100)
   group3221 = ggroup(container = group32[1,2])
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
   text32212 = gedit(text="5", container=group3221, width=2, coerce.with=as.integer)
