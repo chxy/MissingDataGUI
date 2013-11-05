@@ -19,8 +19,7 @@ Imports:
     GGally,
     cairoDevice,
     grid,
-    reshape,
-    reshape2
+    reshape
 Suggests:
     Hmisc,
     norm,

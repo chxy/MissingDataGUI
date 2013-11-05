@@ -20,7 +20,7 @@ library_call = function(pkg) {
 }
 
 library_gui = function(pkg) {
-  if (require(pkg)) return()
+  if (require(pkg, character.only=TRUE)) return()
   if (gconfirm(paste('Install the missing package ', pkg, '?', sep = ''))) {
     install.packages(pkg)
     library_call(pkg)

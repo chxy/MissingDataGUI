@@ -44,9 +44,9 @@
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
-##' @import gWidgets Hmisc norm ggplot2
-##' @importFrom reshape2 melt
+##' @import gWidgets ggplot2
 ##' @importFrom grid viewport
+##' @importFrom reshape melt.data.frame
 ##' @importFrom GGally ggpairs
 ##' @importFrom GGally ggparcoord
 ##' @examples
@@ -246,7 +246,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   graph_map = function(){
       Mapdat=data.frame(is.na(m$dataset[,gt11[m$name_select,2]]))
       Mapdat$observation=1:nrow(Mapdat)
-      mapdat=melt(Mapdat,"observation")
+      mapdat=melt.data.frame(Mapdat,"observation")
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
@@ -255,7 +255,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       Mapdat2=Mapdat[order(rowSums(Mapdat[,-(m$n+1)]),decreasing=TRUE),]
       Mapdat2=Mapdat2[,order(colSums(Mapdat2),decreasing=TRUE)]
       Mapdat2$Reordered_Observation=1:nrow(Mapdat2)
-      mapdat=melt(Mapdat2[,-1],"Reordered_Observation")
+      mapdat=melt.data.frame(Mapdat2[,-1],"Reordered_Observation")
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
@@ -268,7 +268,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       order32=hclust(dist32,"ward")$order
       Mapdat3=Mapdat3[,order32]
       Mapdat3$Reordered_Observation=1:nrow(Mapdat3)
-      mapdat=melt(Mapdat3[,],"Reordered_Observation")
+      mapdat=melt.data.frame(Mapdat3[,],"Reordered_Observation")
       colnames(mapdat)[3]="Missing"
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))

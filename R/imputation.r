@@ -63,10 +63,6 @@
 ##' keep track of the original row number and then help to find the
 ##' shadow matrix.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
-##' @importFrom mice mice
-##' @importFrom mice mice.impute.pmm
-##' @importFrom mi mi
-##' @importFrom arm bayesglm
 imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL,loop=NULL){
     if (is.null(origdata)) return(NULL)
     if (is.null(vartype)) vartype=unname(sapply(origdata,function(x)class(x)[1]))
@@ -174,6 +170,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             gmessage("Not every variable is numeric. Cannot impute missing values under the multivariate normal model.", icon = "error")
             return(NULL)
         } else {
+          library_gui('norm')
             s = prelim.norm(as.matrix(origdata))
             thetahat = em.norm(s)
             rngseed(mi.seed)
@@ -192,6 +189,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             gmessage('All the observations have missing values. Cannot impute by Hmisc::aregImpute.', icon = "warning")
             return(NULL)
         } else {
+          library_gui('Hmisc')
             formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
             set.seed(mi.seed)
             f = aregImpute(formula0, data=origdata, n.impute=mi.n)
@@ -207,6 +205,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
         }
     }
     else if (method == 'MI:mice') {
+      library_gui('mice')
         f = mice(origdata, method=attr(method,'method'), m=mi.n, printFlag=FALSE, seed=mi.seed)
         tmpres = f$imp
         for (j in 1:mi.n){
@@ -218,6 +217,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
         names(dat)=paste('mice',1:mi.n)
     }
     else if (method == 'MI:mi') {
+      library_gui('mi')
         f = mi(origdata, n.imp=mi.n, seed=mi.seed)
         tmpres = f@imp
         for (j in 1:mi.n){
