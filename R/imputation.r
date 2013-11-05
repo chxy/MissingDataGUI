@@ -80,7 +80,8 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
         return(NULL)
     }
     if (!is.null(condition)) {
-        dat = by(data.frame(origdata,row_id=1:nrow(origdata)),origdata[,condition],imputation,method=method,vartype=vartype,missingpct=missingpct,condition=NULL,row_var='row_id',loop=condition)
+        idx_cond = which(colnames(origdata)==condition)
+        dat = by(data.frame(origdata,row_id=1:nrow(origdata)),origdata[,condition],imputation,method=method,vartype=vartype[-idx_cond],missingpct=missingpct[-idx_cond],condition=NULL,row_var='row_id',loop=condition)
         dat = dat[!sapply(dat,is.null)]
         k1=length(dat[[1]])
         k2=length(dat)
@@ -121,14 +122,16 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     else if (method == 'Simple') {
         dat$d2=dat$d1
         for (i in 1:n) {
+          if (sum(is.na(dat$d1[,i]))){
             if (vartype[i] %in% c('integer','numeric')) {
-                dat$d1[is.na(dat$d1[,i]),i] = median(dat$d1[,i], na.rm=TRUE)
-                dat$d2[is.na(dat$d2[,i]),i] = mean(dat$d2[,i], na.rm=TRUE)
+              dat$d1[is.na(dat$d1[,i]),i] = median(dat$d1[,i], na.rm=TRUE)
+              dat$d2[is.na(dat$d2[,i]),i] = mean(dat$d2[,i], na.rm=TRUE)
             } else {
-                biggroup = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
-                dat$d1[origshadow[,i],i] = biggroup
-                dat$d2[origshadow[,i],i] = biggroup
+              biggroup = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
+              dat$d1[origshadow[,i],i] = biggroup
+              dat$d2[origshadow[,i],i] = biggroup
             }
+          }
         }
         names(dat)=c('Median','Mean/Mode')
     }
