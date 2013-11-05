@@ -237,6 +237,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                    icon = "error")
           return(TRUE)
       }
+      library(reshape)
       dat = m$dat[[j]]
       dat$Missing = m$Missing
       dat = dat[order(dat$Missing),]
@@ -488,47 +489,54 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     }
     
     for (j in 1:k) {
-        m$group151[[j+m$k]] = ggroup(container = glay15[1,1], label = lab[j], expand = TRUE, horizontal = FALSE)
-        m$glay151[[j+m$k]] = glayout(container = m$group151[[j+m$k]], expand = TRUE, use.scrollwindow = TRUE)
+        m$group151[[j+m$k]] = ggroup(container = glay15, label = lab[j], expand = TRUE, horizontal = FALSE)
+        m$glay151[[j+m$k]] = glayout(container = m$group151[[j+m$k]], use.scrollwindow = TRUE)
     }
+    
+    m$size = size(combo1)*c(.6,1)-c(10,260)
     
     if (m$graphtype=="Histogram/Barchart") {
       for (j in 1:k) {
+        size(m$glay151[[j+m$k]])=c(m$size[1],300*m$n)
           for (i in 1:m$n) {
-              m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
+              m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
               graph_hist(j, i, "stack")
           }
       }
     }
     if (m$graphtype=="Spinogram/Spineplot") {
         for (j in 1:k) {
+          size(m$glay151[[j+m$k]])=c(m$size[1],300*m$n)
             for (i in 1:m$n) {
-                m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
+                m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
                 graph_hist(j, i, "fill")
             }
         }
     }
     if (m$graphtype=="Pairwise Plots") {
         for (j in 1:k) {
-            m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
+          size(m$glay151[[j+m$k]])=m$size
+            m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
             graph_pair(j, 'bottom')
         }
     }
     if (m$graphtype=="Parallel Coordinates") {
         for (j in 1:k) {
+          size(m$glay151[[j+m$k]])=m$size
             if (!graph_pcp(j)) {
-                m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]], expand = TRUE)
+                m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
                 print(m$p+theme(legend.position='bottom'))
             }
         }
     }
     if (m$graphtype=="Missingness Map"){
+      size(m$glay151[[1+m$k]])=c(m$size[1],1200)
         q = graph_map()
-        m$glay151[[1+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]], expand = TRUE)
+        m$glay151[[1+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]])
         print(q$q1)
-        m$glay151[[1+m$k]][2, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]], expand = TRUE)
+        m$glay151[[1+m$k]][2, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]])
         print(q$q2)
-        m$glay151[[1+m$k]][3, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]], expand = TRUE)
+        m$glay151[[1+m$k]][3, 1, expand = TRUE] = ggraphics(container = m$glay151[[1+m$k]])
         print(q$q3)
     }
     # svalue(glay15[1,1])=1
@@ -757,8 +765,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   group15 = ggroup(horizontal = FALSE, container = group13,
                    expand = TRUE, use.scrollwindow = TRUE)
-  glay15 = glayout(container = group15, expand = TRUE, use.scrollwindow = TRUE)
-  glay15[1,1,expand=TRUE] = gnotebook(container = glay15, closebuttons =TRUE, expand=TRUE)
+  glay15 = gnotebook(container = group15, closebuttons =TRUE, expand=TRUE)
  
   #####------------------------------------------------#####
   ##  In the second tab we can:                           ##
