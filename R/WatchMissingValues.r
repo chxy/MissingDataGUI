@@ -696,10 +696,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   #####-------------------------------#####
   ##  New window for missing values      ##
   #####-------------------------------#####
-  size.width = round(max(c(size.width, 800)))
-  size.height = round(max(c(size.height, 600)))
+  size.width = round(max(c(size.width, 700)))
+  size.height = round(max(c(size.height, 450)))
   if (size.height/size.width > 0.8) size.height = size.width * 0.8
-  if (size.width/size.height > 1.4) size.width = size.height * 1.4
+  if (size.width/size.height > 2) size.width = size.height * 2
   combo1 <- gwindow("Missing Values", visible = T, width = size.width, height = size.height)
   tab <- gnotebook(container = combo1)
   
@@ -714,7 +714,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = TRUE)
   size(group12) = round(c(200,750) / c(1000,750) * c(size.width,size.height))
-  nametable = data.frame(Items=1:length(vname), Variables=as.character(vname),
+  nametable = data.frame(ID=1:length(vname), Variables=as.character(vname),
                          Class=as.character(dataclass), NApct=as.character(round(vNApct,3)),
                          stringsAsFactors=FALSE)
   gt11 = gtable(nametable, multiple = T, container = group12,
@@ -736,7 +736,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   tmpcolorby[,1]=as.character(tmpcolorby[,1])
   radio125 = gtable(tmpcolorby, container=group14, expand=TRUE, multiple=TRUE)
   addHandlerKeystroke(radio125, handler = function(h,...){})
-  gframe142 = gframe(text = "Imputation Method", container = group14)
+  gframe142 = gframe(text = "Method", container = group14)
   gr142 = gradio(c('Below 10%','Simple','Hot-deck','MI:areg',
                    'MI:norm','MI:mice','MI:mi'),
                  container = gframe142, handler = function(h,...){
@@ -750,7 +750,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                    'Parallel Coordinates','Missingness Map'), container = gframe143)
   
   group144 = ggroup(horizontal = FALSE, container = group14)
-  gb145 = gbutton('Numeric summary', container = group144,
+  gb145 = gbutton('Summary', container = group144,
                   handler = NumSmry)
   gb144 = gbutton("P l o t", container = group144,
                   handler = Graph)
@@ -804,7 +804,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                     container = group24, expand = TRUE, handler = help_colorlist)
   addHandlerMouseMotion(radio225, handler = help_colorlist)
   
-  gframe242 = gframe(text = "Imputation Method", container = group24)
+  gframe242 = gframe(text = "Method", container = group24)
   help_methods = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create two tabs: Median and Mean/Mode. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical.\n\n      (3) 'Hot-deck' contains two methods: 'Random Value' and 'Nearest Neighbor'. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. 'Nearest neighbor' will replace the NA's by the mean of five nearest neighbors. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n     (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
   }
@@ -826,7 +826,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   help_numeric_summary = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases."))
   }
-  gb245 = gbutton('Numeric summary', container = group244, handler = help_numeric_summary)
+  gb245 = gbutton('Summary', container = group244, handler = help_numeric_summary)
   addHandlerMouseMotion(gb245, handler = help_numeric_summary)
   
   help_plot = function(h,...){
