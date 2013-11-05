@@ -493,7 +493,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         m$glay151[[j+m$k]] = glayout(container = m$group151[[j+m$k]], use.scrollwindow = TRUE)
     }
     
-    m$size = size(combo1)*c(.6,1)-c(10,260)
+    m$size = size(combo1)*c(.6,1)-c(10,255)
     
     if (m$graphtype=="Histogram/Barchart") {
       for (j in 1:k) {
@@ -713,23 +713,23 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group1100 = ggroup(container = group11, expand = TRUE)
   group12 = ggroup(container = group1100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = TRUE)
-  size(group12) = round(c(200,750) / c(1000,750) * c(size.width,size.height))
+  g12width = min(max(nchar(vname))*3+200,round(size.width/2))
+  size(group12) = c(g12width, size.height-25)
   nametable = data.frame(ID=1:length(vname), Variables=as.character(vname),
                          Class=as.character(dataclass), NApct=as.character(round(vNApct,3)),
                          stringsAsFactors=FALSE)
   gt11 = gtable(nametable, multiple = T, container = group12,
                 expand = TRUE, chosencol = 2)
-  size(gt11) = round(c(150,600) / c(1000,750) * c(size.width,size.height))
   addhandlerdoubleclick(gt11, handler = VariableOptions)
   
   label121 = glabel('Categorical variables to condition on',container=group12)
   check123 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
     c('factor','logical','character')], container=group12, use.table=TRUE)
-  size(check123) = round(c(150,200) / c(1000,750) * c(size.width,size.height))
+  size(check123) = c(g12width-5,round(size.height/5))
   
   group13 = ggroup(horizontal = FALSE, container = group1100, expand = TRUE)
   group14 = ggroup(horizontal = TRUE, container = group13)
-  size(group14) = c(round(0.55*size.width), 160)
+  size(group14) = c(min(round(0.6*size.width),size.width-g12width-20), 160)
   tmpcolorby = data.frame(`Color by the missing of`= c('Missing Any Variables',
                                                        'Missing on Selected Variables',
                                                        nametable[vNApct>0,2]))
@@ -775,10 +775,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group2100 = ggroup(container = group21, expand = TRUE)
   group22 = ggroup(container = group2100, use.scrollwindow = TRUE,
                    horizontal = FALSE, expand = T)
-  size(group22) = round(c(200,750) / c(1000,750) * c(size.width,size.height))
+  size(group22) = c(g12width, size.height-25)
   gt21 = gtable(nametable, multiple = T, container = group22,
                 expand = TRUE, chosencol = 2)
-  size(gt21) = round(c(150,600) / c(1000,750) * c(size.width,size.height))
   addHandlerMouseMotion(gt21, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This table displays all variables in the data set and reports the type and the percentage of missing values for each variable.\n\n   We can sort the variables by NA's percent.\n\n   If we doubleclick one row, we can change the variable name, as well as the data type."))
 	})
@@ -787,7 +786,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   check223 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
                             c('factor','logical','character')], 
                             container=group22, use.table=TRUE)
-  size(check223) = round(c(150,200) / c(1000,750) * c(size.width,size.height))
+  size(check223) = c(g12width-5,round(size.height/5))
   addHandlerMouseMotion(check223, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all categorical variables. We can make multiple selection on them.\n\n   Once we select one or more variables, the data set will be divided into small groups based on the selected categorical variable(s).\n\n   And the imputation will be made in each group.\n\n   If the imputation method is 'Below 10%', then the selected conditioning variables are ignored."))
 	})
@@ -795,7 +794,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group23 = ggroup(horizontal = FALSE, container = group2100,
                    expand = TRUE)
   group24 = ggroup(horizontal = TRUE, container = group23)
-  size(group24) = c(round(0.55*size.width), 160)
+  size(group24) = c(min(round(0.6*size.width),size.width-g12width-20), 160)
   help_colorlist = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means whether this case being complete or not.\n\n   The first row 'Missing on Selected Variables' means whether the cases have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
   }
@@ -883,7 +882,6 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   group32[2,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
   frame342 = gframe(text = "MI:mice", container = group32[2,1], horizontal=FALSE)
-  size(frame342) = c(round(0.5 * size.width), size.height-100)
   
   miceSettings = data.frame(nametable[,1:3], Method=mice_default(as.character(dataclass),dataset),
                          stringsAsFactors=FALSE)
