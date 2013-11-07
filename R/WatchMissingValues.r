@@ -493,7 +493,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         m$glay151[[j+m$k]] = glayout(container = m$group151[[j+m$k]], use.scrollwindow = TRUE)
     }
     
-    m$size = size(combo1)*c(.6,1)-c(10,255)
+    m$size = size(combo1)*c(.1,1)-c(10,255)
     
     if (m$graphtype=="Histogram/Barchart") {
       for (j in 1:k) {
