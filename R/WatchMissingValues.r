@@ -172,12 +172,14 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       } else if (m$graphtype=="Missingness Map") return(FALSE)
       
       if ( (!exists('imp_dat',envir=m))  || m$graphtype!="Below 10%" ) {
-          m$dat = imputation(origdata=m$dataset[,c(gt11[m$name_select,2],m$cond),drop=FALSE],
+          m$dat = imputation(origdata=m$dataset[,unique(c(gt11[m$name_select,2],m$cond)),drop=FALSE],
                            method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                            missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                            condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
-          if (all(sapply(m$dat,nrow)==0)) return(TRUE)
-          for (j in 1:length(m$dat)) colnames(m$dat[[j]])[1:m$n]=c(gt11[m$name_select,2])
+          if (all(sapply(m$dat,nrow)==0)) return(TRUE)          
+          for (j in 1:length(m$dat)) {
+            m$dat[[j]]=m$dat[[j]][,c(gt11[m$name_select,2],'row_number'),drop=FALSE]
+          }
       } else {
           m$dat = list(Imported=data.frame(m$imp_dat[,c(gt11[m$name_select,2])],m$imp_dat[,ncol(m$imp_dat)]))
       }
@@ -211,7 +213,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       if (is.factor(dat[,i]) &
           as.numeric(as.character(gt11[m$name_select,4]))[i]<1) suppressMessages(print(p+coord_flip()))
   }
-  graph_pair = function(j, legend.pos){
+  graph_pair = function(j, legend.pos, uppercont='density'){
       if (m$n < 2) {
           gmessage("You selected less than two variables! Please re-select.", icon = "error")
           return()
@@ -229,7 +231,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                     theme(legend.position=legend.pos))
       } else {
           dat$Missings=factor(m$Missing)[order(m$Missing)]
-          print(ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous='density',combo='box',discrete='facetbar')))
+          print(ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous=uppercont,combo='box',discrete='facetbar')))
       }
   }
   graph_pcp = function(j,...){
@@ -409,7 +411,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     gt34input1 = ggroup(container = gt34input0, expand = TRUE, horizontal=FALSE)
     
     gt34input11 = glabel(paste("Name:",gt3421[k,2],"\nClass:",gt3421[k,3],"\nMethod for mice imputation:"), container = gt34input1)
-    possible_methods = list(numeric=c('pmm','norm','norm.nob','norm.boot','norm.predict','mean','2l.norm','2l.pan','2lonly.mean','2lonly.norm','2lonly.pmm','quadratic','cart','ri','sample'),
+    possible_methods = list(numeric=c('pmm','norm','norm.nob','norm.boot','norm.predict','mean','quadratic','cart','ri','sample'),
                             level2=c('pmm','2lonly.pmm','logreg','logreg.boot','cart','sample'),
                             factor3=c('pmm','2lonly.pmm','polyreg','lda','cart','sample'),
                             ordered3=c('pmm','2lonly.pmm','polr','cart','sample'))
@@ -528,7 +530,12 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         for (j in 1:k) {
           size(m$glay151[[j+m$k]])=m$size
             m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
+          if (m$n>2 && m$colorby %in% gt11[m$name_select,2] && 
+                m$imp_method %in% c('Below 10%','Simple')) {
+            graph_pair(j, 'bottom', 'blank')
+          } else {
             graph_pair(j, 'bottom')
+          }
         }
     }
     if (m$graphtype=="Parallel Coordinates") {
@@ -573,12 +580,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           gmessage("All variables are selected to export.")
       }
       
-      dat = imputation(origdata=m$dataset[,c(gt11[m$name_select,2],m$cond)],
+      dat = imputation(origdata=m$dataset[,unique(c(gt11[m$name_select,2],m$cond)),drop=FALSE],
                        method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                        missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                        condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
       dat = lapply(dat, function(x) {
-          x = data.frame(x[,-ncol(x)],is.na(m$dataset[x[,ncol(x)],gt11[m$name_select,2]]))
+          x = data.frame(x[,gt11[m$name_select,2]],
+                         is.na(m$dataset[x[,ncol(x)],gt11[m$name_select,2]]))
           colnames(x) = c(gt11[m$name_select,2],paste('Missing', gt11[m$name_select,2], sep='_'))
           return(x)
           })
@@ -587,7 +595,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       for (j in 1:length(dat)) {
           entire_dat[[j]] = data.frame(m$dataset,is.na(m$dataset))
           colnames(entire_dat[[j]])=c(colnames(m$dataset),paste('Missing',colnames(m$dataset),sep='_'))
-          entire_dat[[j]][,colnames(dat[[j]][,1:(2*m$n)])] = dat[[j]][,1:(2*m$n)]
+          entire_dat[[j]][,colnames(dat[[j]])] = dat[[j]]
       }
     
     ExpData = function(opa,opb){
