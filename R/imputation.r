@@ -226,7 +226,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             dat[[j]][names(tmpres[[j]][[i]]@random),names(tmpres[[j]])[i]]=tmpres[[j]][[i]]@random
           }
         }
-        names(dat)=paste('mi',1:3)
+        names(dat)=paste('mi',1:mi.n)
     }
     res = lapply(dat, function(x) if (is.null(loop)) {data.frame(x, row_number=row_NO)} else{data.frame(x, cond, row_number=row_NO)})
     return(res)
