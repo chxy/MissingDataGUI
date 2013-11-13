@@ -156,6 +156,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         message("Number of the nearest neighbors is set to 5.")
         svalue(text32212)=5
       }
+      m$parajitter=svalue(radio32311)
       if (m$imp_method == 'MI:mice') attr(m$imp_method,'method')=gt3421[m$name_select,4]
   }
   initial_plot = function(){
@@ -231,7 +232,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           print(ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous='density',combo='box',discrete='facetbar')))
       }
   }
-  graph_pcp = function(j){
+  graph_pcp = function(j,...){
       if (m$n==1) {
           gmessage('You only selected one variable. Cannot plot the parallel coordinates.',
                    icon = "error")
@@ -239,9 +240,19 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       }
       library(reshape)
       dat = m$dat[[j]]
+      if (m$parajitter == "Jitter on categorical variables") {
+        rowz = nrow(dat)
+        for (i in which(sapply(dat[,1:m$n],class) %in% c('logical','factor','ordered','character'))) {
+          if (is.character(dat[,i])) dat[,i]=factor(dat[,i])
+          dat[,i] = as.integer(dat[,i])
+          set.seed(m$mi_seed)
+          dat[,i] = dat[,i] + runif(rowz, -0.1, 0.1)
+        }
+      }
       dat$Missing = m$Missing
       dat = dat[order(dat$Missing),]
-      m$p = ggparcoord(dat,1:m$n,groupColumn='Missing',scale='uniminmax')
+      m$p = ggparcoord(dat,1:m$n,groupColumn='Missing',scale='uniminmax',
+                       alphaLines=0.5,...)
       return(FALSE)
   }
   graph_map = function(){
@@ -522,9 +533,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     }
     if (m$graphtype=="Parallel Coordinates") {
         for (j in 1:k) {
-          size(m$glay151[[j+m$k]])=m$size
-            if (!graph_pcp(j)) {
+          size(m$glay151[[j+m$k]])=c(m$size[1],900)
+            if (!graph_pcp(j,title='Original variable order')) {
                 m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
+                print(m$p+theme(legend.position='bottom'))
+            }
+            if (!graph_pcp(j,order='allClass',title='Variables ordered by their variation between colors')) {
+                m$glay151[[j+m$k]][2, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
                 print(m$p+theme(legend.position='bottom'))
             }
         }
@@ -865,29 +880,39 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group31 = ggroup(container = tab, label = "Settings", expand = TRUE, horizontal=FALSE)
   group32 = glayout(container = group31, expand = TRUE, spacing = 10)
   
-  group32[1,1] = gframe(text = "Multiple imputation", 
-                    container = group32, horizontal=FALSE)
-  group3211 = ggroup(container = group32[1,1])
+  group32[1,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
+  frame342 = gframe(text = "MI:mice", container = group32[1,1], horizontal=FALSE)
+  
+  miceSettings = data.frame(nametable[,1:3], Method=mice_default(as.character(dataclass),dataset),
+                            stringsAsFactors=FALSE)
+  gt3421 = gtable(miceSettings, multiple = T, container = frame342, expand = FALSE, chosencol = 2)
+  size(gt3421) = c(round(0.45 * size.width), size.height-30)
+  addhandlerdoubleclick(gt3421, handler = miceMethod)
+  
+  group32[1,2] = ggroup(container = group32, expand=FALSE, horizontal=FALSE)
+  
+  frame3211 = gframe(text = "Multiple imputation", 
+                    container = group32[1,2], horizontal=FALSE)
+  group3211 = ggroup(container = frame3211)
   label32111 = glabel(text="Number of imputed sets :  ", container=group3211)
   text32112 = gedit(text="3", container=group3211, width=2, coerce.with=as.integer)
-  group3212 = ggroup(container = group32[1,1])
+  group3212 = ggroup(container = frame3211)
   label32121 = glabel(text="Random number seed :  ", container=group3212)
   text32122 = gedit(text="1234567", container=group3212, width=8, coerce.with=as.integer)
   
-  group32[1,2] = gframe(text = "Hot-deck: nearest neighbor", 
-                    container = group32, horizontal=FALSE)
-  group3221 = ggroup(container = group32[1,2])
+  label321 = glabel(container = group32[1,2])
+  
+  frame3221 = gframe(text = "Hot-deck: nearest neighbor", 
+                    container = group32[1,2], horizontal=FALSE)
+  group3221 = ggroup(container = frame3221)
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
   text32212 = gedit(text="5", container=group3221, width=2, coerce.with=as.integer)
   
-  group32[2,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
-  frame342 = gframe(text = "MI:mice", container = group32[2,1], horizontal=FALSE)
+  label322 = glabel(container = group32[1,2])
   
-  miceSettings = data.frame(nametable[,1:3], Method=mice_default(as.character(dataclass),dataset),
-                         stringsAsFactors=FALSE)
-  gt3421 = gtable(miceSettings, multiple = T, container = frame342, expand = FALSE, chosencol = 2)
-  size(gt3421) = c(round(0.45 * size.width), size.height-120)
-  addhandlerdoubleclick(gt3421, handler = miceMethod)
+  frame3231 = gframe(text = "Parallel coordinates plot", 
+                        container = group32[1,2], horizontal=FALSE)
+  radio32311 = gradio(c('Jitter on categorical variables','No jitter'),container = frame3231)
   
   svalue(tab)=1
 }
