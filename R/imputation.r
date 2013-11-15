@@ -4,10 +4,11 @@
 ##' This function provides eight methods for imputation with
 ##' categorical varaibles as conditions.
 ##'
-##' The imputation methods: This list displays all the imputation methods.
-##' Users can make one selection. (1) 'Below 10%' means NA's 
-##' of one variable will be replaced by the value which equals 
-##' to the minimum of the variable minus 10% of the range. 
+##' The imputation methods: This list displays all the imputation 
+##' methods. Users can make one selection. (1) 'Below 10%' means 
+##' NA's of one variable will be replaced by the value which 
+##' equals to the minimum of the variable minus 10% of the range. 
+##' For categorical variables, NA's are treated as a new category. 
 ##' Under this status the selected conditioning variables are 
 ##' ignored. If the data are already imputed, then this item 
 ##' will show the imputed result. (2) 'Simple' will create two 
@@ -20,10 +21,13 @@
 ##' 'Nearest Neighbor'. 'Random Value' means NA's will be 
 ##' replaced by any values of this variable (omit NA's) which 
 ##' are randomly selected. 'Nearest neighbor' will replace the 
-##' NA's by the mean of five nearest neighbors. It requires at 
-##' lease one case to be complete, at least two variables to 
-##' be selected, and no character variables. It returns median 
-##' for the case if all values in it are NA's.
+##' NA's by the mean of the nearest neighbors. The number of 
+##' neighbors is default to 5, and can be changed by argument 
+##' knn. The nearest neighbor method requires at lease one case 
+##' to be complete, at least two variables to be selected, and 
+##' no factor/character variables. The ordered factors are 
+##' treated as integers. The method will return medians if 
+##' the observation only contains NA's.
 ##' (4) 'MI:areg' uses function \code{\link[Hmisc]{aregImpute}} 
 ##' from package \pkg{Hmisc}. It requires at lease one case to 
 ##' be complete, and at least two variables to be selected.
@@ -32,14 +36,18 @@
 ##' to be numeric(at least integer), and at least two variables 
 ##' to be selected. Sometimes it cannot converge, then the 
 ##' programme will leave NA's without imputation.
-##' (6) 'MI:mice' uses the \pkg{mice} package.
+##' (6) 'MI:mice' uses the \pkg{mice} package. The methods of 
+##' the variables containing NA's must be attached with argument
+##' method. If not, then default methods are used.
 ##' (7) 'MI:mi' employes the \pkg{mi} package.
 ##' @param origdata A data frame whose missing values need to be
-##' imputed. This data frame should be selected from the missing data
-##' GUI.
-##' @param method The imputation method selected from the missing data
-##' GUI. Must be one of 'Below 10%','Simple','Hot-deck','MI:areg',
-##' 'MI:norm','MI:mice','MI:mi'.
+##' imputed. This data frame should be selected from the missing 
+##' data GUI.
+##' @param method The imputation method selected from the missing 
+##' data GUI. Must be one of 'Below 10%','Simple','Hot-deck',
+##' 'MI:areg','MI:norm','MI:mice','MI:mi'. If method='MI:mice', 
+##' then the methods of the variables containing NA's must be attached 
+##' with argument method. If not, then default methods are used.
 ##' @param vartype A vector of the classes of origdata. The length is
 ##' the same as the number of columns of origdata. The value should be
 ##' from "integer", "numeric", "logical", "character", "factor", and "ordered".
@@ -55,29 +63,30 @@
 ##' @param mi.n number of the imputation sets for multiple imputation
 ##' @param mi.seed random number seed for multiple imputation
 ##' @param row_var A column name (character) that defines the ID of rows.
-##' @param loop if it is in an internal loop by the conditional variables,
-##' then loop=condtion.
 ##' @return The imputed data frame with the last column being the row
 ##' number from the original dataset. During the procedure of the
 ##' function, rows may be exchanged, thus a column of row number could
 ##' keep track of the original row number and then help to find the
 ##' shadow matrix.
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
-imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL,loop=NULL){
+imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL){
     if (is.null(origdata)) return(NULL)
     if (is.null(vartype)) vartype=unname(sapply(origdata,function(x)class(x)[1]))
     if (is.null(missingpct)) missingpct=unname(sapply(origdata,function(x)mean(is.na(x))))
     row_NO = if (is.null(row_var)) {1:nrow(origdata)} else {origdata[,row_var]}
-    cond = if (is.null(loop)) {NULL} else {origdata[,loop,drop=FALSE]}
-    origdata = origdata[,setdiff(colnames(origdata),c(row_var,loop)),drop=FALSE]
+    origdata = origdata[,setdiff(colnames(origdata),row_var),drop=FALSE]
     n=ncol(origdata)
     if (n==1 && substr(method,1,3) == 'MI:'){
         gmessage('You only selected one variable. Cannot apply the multiple imputation.', icon = "error")
         return(NULL)
     }
     if (!is.null(condition)) {
-        idx_cond = which(colnames(origdata)==condition)
-        dat = by(data.frame(origdata,row_id=1:nrow(origdata)),origdata[,condition],imputation,method=method,vartype=vartype[-idx_cond],missingpct=missingpct[-idx_cond],condition=NULL,row_var='row_id',loop=condition)
+      if (sum(is.na(condition))) {
+        condition = sapply(condition,as.character)
+        condition[is.na(condition)] = "NaN"
+        condition = data.frame(condition)
+      }
+        dat = by(data.frame(origdata,row_id=1:nrow(origdata)),condition,imputation,method=method,vartype=vartype,missingpct=NULL,condition=NULL,knn=knn,mi.n=mi.n,mi.seed=mi.seed,row_var='row_id',simplify=FALSE)
         dat = dat[!sapply(dat,is.null)]
         k1=length(dat[[1]])
         k2=length(dat)
@@ -108,7 +117,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
                 dat$d1[origshadow[,i],i] = 'NAN'
             }
             if (vartype[i] %in% c("factor","ordered") &&
-                    as.numeric(as.character(missingpct))[i]<1 & as.numeric(as.character(missingpct))[i]>0) {
+                    as.numeric(as.character(missingpct))[i]>0) {
                 dat$d1[,i]=factor(dat$d1[,i],levels = c('NAN',levels(factor(dat$d1[,i]))))
                 dat$d1[origshadow[,i],i] = 'NAN'
             }
@@ -133,10 +142,10 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     }
     else if (method == 'Hot-deck') {
         set.seed(mi.seed)
-        if (n==1 || sum(complete.cases(origdata))==0 || "character" %in% vartype) {
+        if (n==1 || sum(complete.cases(origdata))==0 || any(c("factor","character") %in% vartype)) {
             if (n==1) warning_message='You only selected one variable. Cannot apply the nearest neighbor imputation. Only the random value imputation is given.'
             if (sum(complete.cases(origdata))==0) warning_message="All the observations have missing values. Cannot find the nearest neighbor."
-            if ("character" %in% vartype) warning_message='Cannot impute the nearest neighbor with one or more character variables.'
+            if (any(c("factor","character") %in% vartype)) warning_message='Cannot impute the nearest neighbor with one or more factor or character variables.'
             gmessage(warning_message, icon='warning')
             for (i in 1:n) {
               fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
@@ -149,12 +158,16 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
               fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
               dat$d1[origshadow[,i],i] = fill
             }
-            CmpltDat = dat$d2[complete.cases(dat$d2),]
+            CmpltDat = dat$d2[complete.cases(dat$d2),]            
             for (i in which(!complete.cases(dat$d2))){
                 usecol = which(!is.na(dat$d2[i,]))
                 if (length(usecol)>0){
                     NNdat = CmpltDat
                     a = rbind(dat$d2[i,], NNdat)[,usecol]
+                    orderedfactor = which(vartype[usecol]=="ordered")
+                    if (length(orderedfactor)) {
+                      for (i in orderedfactor) a[,i]=as.integer(a[,i])
+                    }
                     NNdat$distance = dist(a)[1:nrow(NNdat)]
                     k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(knn,nrow(NNdat)),]
                     dat$d2[i,-usecol] = colMeans(k5NNdat[,1:n][,-usecol,drop=FALSE])
@@ -206,6 +219,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     }
     else if (method == 'MI:mice') {
       library_gui('mice')
+      if (is.null(attr(method,'method'))) attr(method,'method')=vector("character", length = ncol(data))
         f = mice(origdata, method=attr(method,'method'), m=mi.n, printFlag=FALSE, seed=mi.seed)
         tmpres = f$imp
         for (j in 1:mi.n){
@@ -228,6 +242,6 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
         }
         names(dat)=paste('mi',1:mi.n)
     }
-    res = lapply(dat, function(x) if (is.null(loop)) {data.frame(x, row_number=row_NO)} else{data.frame(x, cond, row_number=row_NO)})
+    res = lapply(dat, function(x) data.frame(x, row_number=row_NO))
     return(res)
 }

@@ -124,8 +124,18 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       m$n=length(m$name_select)
       m$imp_method=svalue(gr142)
       m$graphtype=svalue(gr143)
-      m$cond=check123[svalue(check123,index=T)]
-      if (length(m$cond)==0 || m$imp_method=='Below 10%') m$cond=NULL
+      cond=check123[svalue(check123,index=T)]
+      idx_cond = if (length(cond)) (cond %in% gt11[m$name_select,2]) else FALSE
+      if (any(idx_cond) && any((gt11[(gt11[,2] %in% cond[idx_cond]),3])>0)) {
+        gmessage("At least one of the conditional variables contains missing values and is selected to be imputed.\n\nWe will unselect the variable(s).\n\nTip: please impute the conditional variable before conditioning on it.",icon='warning')
+        miss_cond = gt11[(gt11[,2] %in% cond[idx_cond]),1]
+        svalue(gt11) = setdiff(m$name_select, miss_cond)
+        m$name_select=svalue(gt11, index = TRUE)
+        m$n=length(m$name_select)
+      }
+      if (length(cond)==0 || m$imp_method=='Below 10%') m$cond=NULL else {
+        m$cond=m$dataset[,cond,drop=FALSE]
+      }
       m$colorby=as.character(svalue(radio125))
       if (length(m$colorby)==0) {
           m$colorby="Missing on Selected Variables"
@@ -139,7 +149,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           }
       }
       m$mi_n=svalue(text32112)
-      if (is.na(m$mi_n)) {
+      if (is.na(m$mi_n) || m$mi_n < 1) {
         m$mi_n=3
         message("Number of imputation sets is set to 3.")
         svalue(text32112)=3
@@ -169,13 +179,18 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
               m$n = length(m$name_select)
               return(FALSE)
           }
-      } else if (m$graphtype=="Missingness Map") return(FALSE)
+      } else if (m$graphtype=="Missingness Map") {
+        if (m$n ==1) {
+          gmessage("Please select at least two variables for a missingness map.", icon = "error")
+          return(TRUE)
+        } else {return(FALSE)}
+      }
       
       if ( (!exists('imp_dat',envir=m))  || m$graphtype!="Below 10%" ) {
-          m$dat = imputation(origdata=m$dataset[,unique(c(gt11[m$name_select,2],m$cond)),drop=FALSE],
-                           method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
-                           missingpct=as.numeric(as.character(gt11[m$name_select,4])),
-                           condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
+          m$dat = imputation(origdata=m$dataset[,gt11[m$name_select,2],drop=FALSE],
+                      method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
+                      missingpct=as.numeric(as.character(gt11[m$name_select,4])),
+                      condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
           if (all(sapply(m$dat,nrow)==0)) return(TRUE)          
           for (j in 1:length(m$dat)) {
             m$dat[[j]]=m$dat[[j]][,c(gt11[m$name_select,2],'row_number'),drop=FALSE]
@@ -580,7 +595,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           gmessage("All variables are selected to export.")
       }
       
-      dat = imputation(origdata=m$dataset[,unique(c(gt11[m$name_select,2],m$cond)),drop=FALSE],
+      dat = imputation(origdata=m$dataset[,gt11[m$name_select,2],drop=FALSE],
                        method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                        missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                        condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
@@ -802,7 +817,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   gt21 = gtable(nametable, multiple = T, container = group22,
                 expand = TRUE, chosencol = 2)
   addHandlerMouseMotion(gt21, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This table displays all variables in the data set and reports the type and the percentage of missing values for each variable.\n\n   We can sort the variables by NA's percent.\n\n   If we doubleclick one row, we can change the variable name, as well as the data type."))
+    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This table displays all variables in the data set and reports the type and the percentage of missing values for each variable.\n\n   Users can sort the variables by NA's percent.\n\n   Doubleclicking one row can change the variable name, as well as the data type.\n\n   The table allows text entry to find a variable."))
 	})
   
   label221 = glabel('Categorical variables to condition on',container=group22)
@@ -811,7 +826,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                             container=group22, use.table=TRUE)
   size(check223) = c(g12width-5,round(size.height/5))
   addHandlerMouseMotion(check223, handler = function(h,...){
-    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all categorical variables. We can make multiple selection on them.\n\n   Once we select one or more variables, the data set will be divided into small groups based on the selected categorical variable(s).\n\n   And the imputation will be made in each group.\n\n   If the imputation method is 'Below 10%', then the selected conditioning variables are ignored."))
+    if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all categorical variables. We can make multiple selection on them.\n\n   Once we select one or more variables, the data set will be divided into the categories. The numeric summary and imputation will be made in each category.\n\n   If the imputation method is 'Below 10%', then the selected conditioning variables are ignored.\n\n   The list allows text entry to find a variable."))
 	})
   
   group23 = ggroup(horizontal = FALSE, container = group2100,
@@ -819,7 +834,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group24 = ggroup(horizontal = TRUE, container = group23)
   size(group24) = c(min(round(0.6*size.width),size.width-g12width-20), 160)
   help_colorlist = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means whether this case being complete or not.\n\n   The first row 'Missing on Selected Variables' means whether the cases have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all variables which have missing values.\n\n   If the user chooses one of them, the color of the plot showing on the right will change based on whether the cases being NA on that variable or not.\n\n   The user can also choose several variables. Then the color of the plot will be based on whether the cases have missing values on any of those variable.\n\n   The first row 'Missing Any Variables' means the plot is colored by whether the observation is complete or not, regardless of the selected variables.\n\n   The second row 'Missing on Selected Variables' means whether the observations have missing values on any of the selected variable.\n\n   The widget allows text entry to find a particular variable if the list is quite long."))
   }
   radio225 = gtable(data.frame(`Color by the missing of`= c('Missing Any Variables',
                     'Missing on Selected Variables', nametable[vNApct>0,2])),
@@ -828,7 +843,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   gframe242 = gframe(text = "Method", container = group24)
   help_methods = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create two tabs: Median and Mean/Mode. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical.\n\n      (3) 'Hot-deck' contains two methods: 'Random Value' and 'Nearest Neighbor'. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. 'Nearest neighbor' will replace the NA's by the mean of five nearest neighbors. It requires at lease one case to be complete, at least two variables to be selected, and no character variables. It returns median for the case if all values in it are NA's.\n\n     (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. For categorical variables, NA's are treated as a new category. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create two tabs: Median and Mean/Mode. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical.\n\n      (3) 'Hot-deck' contains two methods: 'Random Value' and 'Nearest Neighbor'. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. 'Nearest neighbor' will replace the NA's by the mean of the nearest neighbors. The number of neighbors is default to 5, and editable in the Settings tab. The nearest neighbor method requires at lease one case to be complete, at least two variables to be selected, and no factor/character variables. The ordered factors are treated as integers. The method will return medians if the observation only contains NA's.\n\n     For all the multiple imputation methods below, the number of imputed sets (default to be 3) and random number seed can be set in the Settings tab.\n\n      (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package. In the Settings tab, the imputing methods for all variables are displayed. Doubleclicking the variable will allow the user to change the method.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
   }
   gr242 = gradio(c('Below 10%','Simple','Hot-deck','MI:areg',
                    'MI:norm','MI:mice','MI:mi'),
@@ -837,7 +852,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   gframe243 = gframe(text = "Graph Type", container = group24)
   help_plottype = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This frame shows all plots we can make.\n\n      (1)'Histogram/Barchart' will display histograms (numeric variables) and barcharts(categorical variables) for each variable selected.\n\n      (2)'Spinogram/Spineplot' shows the spineplot for each selected variable.\n\n      (3)'Pairwise Scatterplots' displays n*(n-1)/2 scatterplots if we select n variables. When n>5, then only the first 5 variables are displayed.\n\n      When n=2, a scatterplot is drawn for the two variables. When 2<n<=5, the function 'ggpairs' from package 'GGally' is used.\n\n      (4)'Parallel Coordinates' displays parallel coordinates plot for the selected variables.\n\n      (5)'Missingness Map' shows the positions of missing values in all the observations from the variable selected, regardless the imputation."))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This frame shows all plots we can make.\n\n      (1)'Histogram/Barchart' will display histograms (numeric variables) and barcharts(categorical variables) for each variable selected.\n\n      (2)'Spinogram/Spineplot' shows the spineplot for each selected variable.\n\n      (3)'Pairwise Plots' will generate n*(n-1) plots if n variables are selected.\n\n       For two quantitative variables, scatterplots are in the lower matrix and contour density plots are in the upper matrix. For one categorical variable and one quantitative variable, histograms are in the lower matrix and boxplots are in the upper matrix. Two categorical variables will give a barchart.\n\n       When n>5, then only the first 5 variables are displayed. When n=2, a scatterplot is drawn for the two variables. When 2<n<=5, the function 'ggpairs' from package 'GGally' is used.\n\n      (4)'Parallel Coordinates' displays two parallel coordinates plots for the selected variables. One shows the axes in the original order, and the other in an optimized order, determined by whether the missings and non-missings can be separated well by the variable. (order='allClass' is used. See ?GGally::ggparcoord)\n\n       Whether jittered on the categorical variables can be set in the Settings tab.\n\n      (5)'Missingness Map' shows the positions of missing values in all the observations from the variable selected, regardless of the imputation. Three maps are given, and the variables and observations are sorted as the titles say."))
   }
   gr243 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
                    'Parallel Coordinates','Missingness Map'), container = gframe243,
@@ -846,19 +861,19 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   group244 = ggroup(horizontal = FALSE, container = group24)
   help_numeric_summary = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases."))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases.\n\n   All the summaries and tables can be conditioned on the categorical variables."))
   }
   gb245 = gbutton('Summary', container = group244, handler = help_numeric_summary)
   addHandlerMouseMotion(gb245, handler = help_numeric_summary)
   
   help_plot = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will draw a plot based on the options the user chooses.\n\n   All the n variables the user selected should be displayed, except that when the graph type is 'Pairwise Scatterplots' and n>5, then only the first 5    variables are displayed."))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will draw a plot based on the data and options the user chooses."))
   }
   gb244 = gbutton("P l o t", container = group244, handler = help_plot)
   addHandlerMouseMotion(gb244, handler = help_plot)
   
   help_export = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   Users could name the exported data, and the information of imputation method will be completed in the file name automatically.\n\n   Two file formats are provided: csv and rda. For both formats, the number of columns in the exported data depends on the demand of users. There are 2*n columns if the user selected n variables. The first n columns are the imputed data, and the second n columns are the 'shadow matrix' which indicate whether the values are missing or not in the original dataset."))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   A window interface will pop up to let the user change some exporting options. The imputation method will be completed in the file name automatically.\n\n   The imputed data can be saved in csv or rda formats, or to a list in the R console."))
   }
   gb246 = gbutton('Export data', container = group244, handler = help_export)
   addHandlerMouseMotion(gb246, handler = help_export)
