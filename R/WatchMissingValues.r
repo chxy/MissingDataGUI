@@ -547,7 +547,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
             m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
           if (m$n>2 && m$colorby %in% gt11[m$name_select,2] && 
                 m$imp_method %in% c('Below 10%','Simple')) {
-            graph_pair(j, 'bottom', 'blank')
+            graph_pair(j, 'bottom', 'cor')
           } else {
             graph_pair(j, 'bottom')
           }
