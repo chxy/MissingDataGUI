@@ -59,7 +59,9 @@
 ##' imputation is implemented in each group. There are no missing
 ##' values in those variables. If it is null, then there is no
 ##' division. The imputation is based on the whole dataset.
-##' @param knn number of the nearest neighbors
+##' @param knn number of the nearest neighbors. Can be attached with
+##' an attribute named "hotdeck" for selecting the mean of neighbors
+##' or a random neighbor, i.e., attr(knn,"hotdeck")=="A random neighbor".
 ##' @param mi.n number of the imputation sets for multiple imputation
 ##' @param mi.seed random number seed for multiple imputation
 ##' @param row_var A column name (character) that defines the ID of rows.
@@ -153,6 +155,9 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             }
             names(dat)='Random Value'
         } else {
+          if (!is.null(attr(knn,"hotdeck")) && attr(knn,"hotdeck")=="A random neighbor") {
+            hotdeck = TRUE
+          } else {hotdeck = FALSE}
             dat$d2=dat$d1
             for (i in 1:n) {
               fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
@@ -170,12 +175,16 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
                     }
                     NNdat$distance = dist(a)[1:nrow(NNdat)]
                     k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(knn,nrow(NNdat)),]
-                    dat$d2[i,-usecol] = colMeans(k5NNdat[,1:n][,-usecol,drop=FALSE])
+                    dat$d2[i,-usecol] = if (hotdeck) {
+                      k5NNdat[,1:n][sample(1:nrow(k5NNdat),1),-usecol]
+                    } else {colMeans(k5NNdat[,1:n][,-usecol,drop=FALSE])}
                 } else {
-                    dat$d2[i,] = sapply(dat$d2, median, na.rm=TRUE)
+                    dat$d2[i,] = if (hotdeck) {
+                      CmpltDat[sample(1:nrow(CmpltDat),1),]
+                    } else {sapply(dat$d2, median, na.rm=TRUE)}
                 }
             }
-            names(dat)=c('Random Value','Nearest Neighbor')
+            names(dat)=c('Random Value',ifelse(hotdeck,'Random Neighbor','Neighbor Mean'))
         }
     }
     else if (method == 'MI:norm') {

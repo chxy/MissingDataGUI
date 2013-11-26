@@ -166,6 +166,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         message("Number of the nearest neighbors is set to 5.")
         svalue(text32212)=5
       }
+      attr(m$nn_k,'hotdeck')=svalue(radio32231)
       m$parajitter=svalue(radio32311)
       if (m$imp_method == 'MI:mice') attr(m$imp_method,'method')=gt3421[m$name_select,4]
   }
@@ -930,6 +931,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group3221 = ggroup(container = frame3221)
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
   text32212 = gedit(text="5", container=group3221, width=2, coerce.with=as.integer)
+  group3222 = ggroup(container = frame3221)
+  label32221 = glabel(text="Imputed by :  ", container=group3222)
+  radio32231 = gradio(c("Mean of the neighbors","A random neighbor"),container = group3222)
   
   label322 = glabel(container = group32[1,2])
   
