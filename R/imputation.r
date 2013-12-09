@@ -11,23 +11,25 @@
 ##' For categorical variables, NA's are treated as a new category. 
 ##' Under this status the selected conditioning variables are 
 ##' ignored. If the data are already imputed, then this item 
-##' will show the imputed result. (2) 'Simple' will create two 
-##' tabs: Median and Mean/Mode. 'Median' means NA's will be 
+##' will show the imputed result. (2) 'Simple' will create three 
+##' tabs: Median, Mean/Mode, and Random Value. 'Median' means NA's will be 
 ##' replaced by the median of this variable (omit NA's). 
 ##' 'Mean/Mode' means NA's will be replaced by the mean of the 
 ##' variable (omit NA's) if it is quantitative, and by the 
 ##' mode of the variable (omit NA's) if it is categorical. 
-##' (3) 'Hot-deck' contains two methods: 'Random Value' and 
-##' 'Nearest Neighbor'. 'Random Value' means NA's will be 
-##' replaced by any values of this variable (omit NA's) which 
-##' are randomly selected. 'Nearest neighbor' will replace the 
-##' NA's by the mean of the nearest neighbors. The number of 
-##' neighbors is default to 5, and can be changed by argument 
-##' knn. The nearest neighbor method requires at lease one case 
-##' to be complete, at least two variables to be selected, and 
-##' no factor/character variables. The ordered factors are 
-##' treated as integers. The method will return medians if 
-##' the observation only contains NA's.
+##' 'Random Value' means NA's will be replaced by any values 
+##' of this variable (omit NA's) which are randomly selected. 
+##' (3) 'Neighbor' contains two methods: 'Average Neighbor' and 
+##' 'Random Neighbor'. 'Average Neighbor' will replace the 
+##' NA's by the mean of the nearest neighbors. 'Random Neighbor' 
+##' substitutes the missing for a random sample of the k nearest 
+##' neighbors. The number of neighbors is default to 5, and 
+##' can be changed by argument knn. The Neighbor methods 
+##' require at lease one case to be complete, at least two 
+##' variables to be selected, and no factor/character variables. 
+##' The ordered factors are treated as integers. The method will 
+##' return the overall mean or a global random sample value 
+##' if the observation only contains NA's.
 ##' (4) 'MI:areg' uses function \code{\link[Hmisc]{aregImpute}} 
 ##' from package \pkg{Hmisc}. It requires at lease one case to 
 ##' be complete, and at least two variables to be selected.
@@ -44,7 +46,7 @@
 ##' imputed. This data frame should be selected from the missing 
 ##' data GUI.
 ##' @param method The imputation method selected from the missing 
-##' data GUI. Must be one of 'Below 10%','Simple','Hot-deck',
+##' data GUI. Must be one of 'Below 10%','Simple','Neighbor',
 ##' 'MI:areg','MI:norm','MI:mice','MI:mi'. If method='MI:mice', 
 ##' then the methods of the variables containing NA's must be attached 
 ##' with argument method. If not, then default methods are used.
@@ -59,9 +61,7 @@
 ##' imputation is implemented in each group. There are no missing
 ##' values in those variables. If it is null, then there is no
 ##' division. The imputation is based on the whole dataset.
-##' @param knn number of the nearest neighbors. Can be attached with
-##' an attribute named "hotdeck" for selecting the mean of neighbors
-##' or a random neighbor, i.e., attr(knn,"hotdeck")=="A random neighbor".
+##' @param knn number of the neighbors.
 ##' @param mi.n number of the imputation sets for multiple imputation
 ##' @param mi.seed random number seed for multiple imputation
 ##' @param row_var A column name (character) that defines the ID of rows.
@@ -127,7 +127,8 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
         names(dat)="Below 10%"
     }
     else if (method == 'Simple') {
-        dat$d2=dat$d1
+      set.seed(mi.seed)
+        dat$d3=dat$d2=dat$d1
         for (i in 1:n) {
           if (sum(is.na(dat$d1[,i]))){
             if (vartype[i] %in% c('integer','numeric')) {
@@ -138,54 +139,48 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
               dat$d1[origshadow[,i],i] = biggroup
               dat$d2[origshadow[,i],i] = biggroup
             }
+            fill=sample(dat$d3[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
+            dat$d3[origshadow[,i],i] = fill
           }
         }
-        names(dat)=c('Median','Mean/Mode')
+        names(dat)=c('Median','Mean/Mode','Random Value')
     }
-    else if (method == 'Hot-deck') {
+    else if (method == 'Neighbor') {
         set.seed(mi.seed)
         if (n==1 || sum(complete.cases(origdata))==0 || any(c("factor","character") %in% vartype)) {
-            if (n==1) warning_message='You only selected one variable. Cannot apply the nearest neighbor imputation. Only the random value imputation is given.'
-            if (sum(complete.cases(origdata))==0) warning_message="All the observations have missing values. Cannot find the nearest neighbor."
-            if (any(c("factor","character") %in% vartype)) warning_message='Cannot impute the nearest neighbor with one or more factor or character variables.'
+            if (n==1) warning_message='You only selected one variable. Cannot apply the neighbor imputation. Only the random value imputation is given.'
+            if (sum(complete.cases(origdata))==0) warning_message="All the observations have missing values. Cannot find the neighbors."
+            if (any(c("factor","character") %in% vartype)) warning_message='Cannot impute by the neighbor with one or more factor or character variables.'
             gmessage(warning_message, icon='warning')
-            for (i in 1:n) {
-              fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
-              dat$d1[origshadow[,i],i] = fill
-            }
-            names(dat)='Random Value'
         } else {
-          if (!is.null(attr(knn,"hotdeck")) && attr(knn,"hotdeck")=="A random neighbor") {
-            hotdeck = TRUE
-          } else {hotdeck = FALSE}
             dat$d2=dat$d1
-            for (i in 1:n) {
-              fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
-              dat$d1[origshadow[,i],i] = fill
-            }
-            CmpltDat = dat$d2[complete.cases(dat$d2),]
+            CmpltDat = dat$d1[complete.cases(dat$d1),]
             orderedfactor = which(vartype=="ordered")
             if (length(orderedfactor)) {
-                for (i in orderedfactor) CmpltDat[,i]=as.integer(CmpltDat[,i])
+                for (j in orderedfactor) CmpltDat[,j]=as.integer(CmpltDat[,j])
             }
-            for (i in which(!complete.cases(dat$d2))){
-                usecol = which(!is.na(dat$d2[i,]))
+            for (i in which(!complete.cases(dat$d1))){
+                usecol = which(!is.na(dat$d1[i,]))
                 if (length(usecol)>0){
                     NNdat = CmpltDat
-                    a = rbind(dat$d2[i,], NNdat)[,usecol]
+                    a = rbind(dat$d1[i,], NNdat)[,usecol,drop=FALSE]
                     b = apply(a,2,scale)
                     NNdat$distance = dist(b)[1:nrow(NNdat)]
-                    k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(knn,nrow(NNdat)),]
-                    dat$d2[i,-usecol] = if (hotdeck) {
-                      k5NNdat[,1:n][sample(1:nrow(k5NNdat),1),-usecol]
-                    } else {colMeans(k5NNdat[,1:n][,-usecol,drop=FALSE])}
+                    kNNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(knn,nrow(NNdat)),]
+                    dat$d1[i,-usecol] = colMeans(kNNdat[,1:n][,-usecol,drop=FALSE])
+                    dat$d2[i,-usecol] = kNNdat[,1:n][sample(1:nrow(kNNdat),1),-usecol]
                 } else {
-                    dat$d2[i,] = if (hotdeck) {
-                      CmpltDat[sample(1:nrow(CmpltDat),1),]
-                    } else {sapply(dat$d2, median, na.rm=TRUE)}
+                    dat$d1[i,] = sapply(origdata, mean, na.rm=TRUE)
+                    dat$d2[i,] = sapply(origdata, function(x)sample(na.omit(x),1))
                 }
             }
-            names(dat)=c('Random Value',ifelse(hotdeck,'Random Neighbor','Neighbor Mean'))
+            if (length(orderedfactor)) {
+              for (j in orderedfactor){
+                dat$d1[,j] = round(dat$d1[,j])
+                dat$d1[,j] = ordered(dat$d1[,j],levels=,labels=levels(origdata[,i]))
+              }
+            }
+            names(dat)=c('Average Neighbor','Random Neighbor')
         }
     }
     else if (method == 'MI:norm') {

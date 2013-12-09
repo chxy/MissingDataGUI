@@ -166,7 +166,6 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         message("Number of the nearest neighbors is set to 5.")
         svalue(text32212)=5
       }
-      attr(m$nn_k,'hotdeck')=svalue(radio32231)
       m$parajitter=svalue(radio32311)
       if (m$imp_method == 'MI:mice') attr(m$imp_method,'method')=gt3421[m$name_select,4]
   }
@@ -776,7 +775,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   radio125 = gtable(tmpcolorby, container=group14, expand=TRUE, multiple=TRUE)
   addHandlerKeystroke(radio125, handler = function(h,...){})
   gframe142 = gframe(text = "Method", container = group14)
-  gr142 = gradio(c('Below 10%','Simple','Hot-deck','MI:areg',
+  gr142 = gradio(c('Below 10%','Simple','Neighbor','MI:areg',
                    'MI:norm','MI:mice','MI:mi'),
                  container = gframe142, handler = function(h,...){
                    if (svalue(gr142)=='Below 10%') {
@@ -844,9 +843,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   gframe242 = gframe(text = "Method", container = group24)
   help_methods = function(h,...){
-      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. For categorical variables, NA's are treated as a new category. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create two tabs: Median and Mean/Mode. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical.\n\n      (3) 'Hot-deck' contains two methods: 'Random Value' and 'Nearest Neighbor'. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. 'Nearest neighbor' will replace the NA's by the mean of the nearest neighbors. The number of neighbors is default to 5, and editable in the Settings tab. The nearest neighbor method requires at lease one case to be complete, at least two variables to be selected, and no factor/character variables. The ordered factors are treated as integers. The method will return medians if the observation only contains NA's.\n\n     For all the multiple imputation methods below, the number of imputed sets (default to be 3) and random number seed can be set in the Settings tab.\n\n      (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package. In the Settings tab, the imputing methods for all variables are displayed. Doubleclicking the variable will allow the user to change the method.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
+      if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. For categorical variables, NA's are treated as a new category. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create three tabs: Median, Mean/Mode, and Random Value. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean/Mode' means NA's will be replaced by the mean of the variable (omit NA's) if it is quantitative, and by the mode of the variable (omit NA's) if it is categorical. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. \n\n      (3) 'Neighbor' contains two methods: 'Average Neighbor' and 'Random Neighbor'. 'Average Neighbor' will replace the NA's by the mean of the nearest neighbors. 'Random Neighbor' substitutes the missing for a random sample of the k nearest neighbors. The number of neighbors is default to 5, and editable in the Settings tab. The nearest neighbor method requires at lease one case to be complete, at least two variables to be selected, and no factor/character variables. The ordered factors are treated as integers. The method will return the overall mean or a global random sample value if the observation only contains NA's. \n\n     For all the multiple imputation methods below, the number of imputed sets (default to be 3) and random number seed can be set in the Settings tab.\n\n      (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package. In the Settings tab, the imputing methods for all variables are displayed. Doubleclicking the variable will allow the user to change the method.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
   }
-  gr242 = gradio(c('Below 10%','Simple','Hot-deck','MI:areg',
+  gr242 = gradio(c('Below 10%','Simple','Neighbor','MI:areg',
                    'MI:norm','MI:mice','MI:mi'),
                  container = gframe242, handler = help_methods)
   addHandlerMouseMotion(gr242, handler = help_methods)
@@ -926,14 +925,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   
   label321 = glabel(container = group32[1,2])
   
-  frame3221 = gframe(text = "Hot-deck: nearest neighbor", 
+  frame3221 = gframe(text = "Neighbor:", 
                     container = group32[1,2], horizontal=FALSE)
   group3221 = ggroup(container = frame3221)
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
   text32212 = gedit(text="5", container=group3221, width=2, coerce.with=as.integer)
-  group3222 = ggroup(container = frame3221)
-  label32221 = glabel(text="Imputed by :  ", container=group3222)
-  radio32231 = gradio(c("Mean of the neighbors","A random neighbor"),container = group3222)
   
   label322 = glabel(container = group32[1,2])
   
