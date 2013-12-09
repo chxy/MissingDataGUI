@@ -163,17 +163,18 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
               fill=sample(dat$d1[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
               dat$d1[origshadow[,i],i] = fill
             }
-            CmpltDat = dat$d2[complete.cases(dat$d2),]            
+            CmpltDat = dat$d2[complete.cases(dat$d2),]
+            orderedfactor = which(vartype=="ordered")
+            if (length(orderedfactor)) {
+                for (i in orderedfactor) CmpltDat[,i]=as.integer(CmpltDat[,i])
+            }
             for (i in which(!complete.cases(dat$d2))){
                 usecol = which(!is.na(dat$d2[i,]))
                 if (length(usecol)>0){
                     NNdat = CmpltDat
                     a = rbind(dat$d2[i,], NNdat)[,usecol]
-                    orderedfactor = which(vartype[usecol]=="ordered")
-                    if (length(orderedfactor)) {
-                      for (i in orderedfactor) a[,i]=as.integer(a[,i])
-                    }
-                    NNdat$distance = dist(a)[1:nrow(NNdat)]
+                    b = apply(a,2,scale)
+                    NNdat$distance = dist(b)[1:nrow(NNdat)]
                     k5NNdat = NNdat[order(NNdat$distance,decreasing=FALSE),][1:min(knn,nrow(NNdat)),]
                     dat$d2[i,-usecol] = if (hotdeck) {
                       k5NNdat[,1:n][sample(1:nrow(k5NNdat),1),-usecol]
