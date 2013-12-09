@@ -177,7 +177,9 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             if (length(orderedfactor)) {
               for (j in orderedfactor){
                 dat$d1[,j] = round(dat$d1[,j])
-                dat$d1[,j] = ordered(dat$d1[,j],levels=,labels=levels(origdata[,i]))
+                l = levels(origdata[,j])
+                dat$d1[,j] = ordered(l[dat$d1[,j]],levels=l)
+                dat$d2[,j] = ordered(l[dat$d2[,j]],levels=l)
               }
             }
             names(dat)=c('Average Neighbor','Random Neighbor')
