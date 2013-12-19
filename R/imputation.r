@@ -194,8 +194,9 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             s = prelim.norm(as.matrix(origdata))
             thetahat = em.norm(s)
             rngseed(mi.seed)
+            theta = da.norm(s,thetahat,steps=10,showits=TRUE)
             for (i in 1:mi.n){
-              dat[[i]] = imp.norm(s,thetahat,as.matrix(origdata))
+              dat[[i]] = imp.norm(s,theta,as.matrix(origdata))
             }
             names(dat)=paste('norm',1:mi.n)
             if (any(sapply(dat,function(x){any(c(Inf,NaN) %in% x)}))) {
