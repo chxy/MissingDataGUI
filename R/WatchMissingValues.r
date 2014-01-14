@@ -137,15 +137,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         m$cond=m$dataset[,cond,drop=FALSE]
       }
       m$colorby=as.character(svalue(radio125))
-      if (length(m$colorby)==0) {
+      if (length(m$colorby)==0 | 'Missing on Selected Variables' %in% m$colorby) {
           m$colorby="Missing on Selected Variables"
       } else {
           if ("Missing Any Variables" %in% m$colorby) {
               m$colorby="Missing Any Variables"
-          } else {
-              if ('Missing on Selected Variables' %in% m$colorby) {
-                  m$colorby="Missing on Selected Variables"
-              }
           }
       }
       m$mi_n=svalue(text32112)
@@ -205,10 +201,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           }
       }
       
-      if (m$colorby=='Missing on Selected Variables') {
+      if (m$colorby[1]=='Missing on Selected Variables') {
           Missing <- !complete.cases(m$dataset[,gt11[m$name_select,2]])
       } else {
-          if (m$colorby=='Missing Any Variables') {
+          if (m$colorby[1]=='Missing Any Variables') {
               Missing <- !complete.cases(m$dataset)
           } else {
               Missing <- !complete.cases(m$dataset[,m$colorby])
@@ -545,8 +541,9 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         for (j in 1:k) {
           size(m$glay151[[j+m$k]])=m$size
             m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
-          if (m$n>2 && m$colorby %in% gt11[m$name_select,2] && 
-                m$imp_method %in% c('Below 10%','Simple')) {
+          if (m$n>2 && any(m$colorby %in% gt11[m$name_select,2]) &&
+                !all(gt11[m$name_select,2][as.numeric(gt11[m$name_select,4])>0] %in% m$colorby) &&
+                m$imp_method %in% c('Below 10%','Simple') && lab[j]!='Random Value' ) {
             graph_pair(j, 'bottom', 'cor')
           } else {
             graph_pair(j, 'bottom')
