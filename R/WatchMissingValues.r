@@ -236,8 +236,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       dat = m$dat[[j]]
       dat = dat[order(m$Missing),]
       if (m$n==2) {
-          Missing=factor(m$Missing)[order(m$Missing)]          
+          Missing=factor(m$Missing)[order(m$Missing)]
+          rsltnx=ifelse(is.numeric(dat[,1]),resolution(dat[,1]),2.5)
+          rsltny=ifelse(is.numeric(dat[,2]),resolution(dat[,2]),2.5)
           print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
+                      position=position_jitter(w=rsltnx/8,h=rsltny/8),
                       size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) + 
                     theme(legend.position=legend.pos))
       } else {
