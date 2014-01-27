@@ -44,7 +44,7 @@
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
-##' @import gWidgets ggplot2
+##' @import ggplot2 cairoDevice gWidgetsRGtk2
 ##' @importFrom grid viewport
 ##' @importFrom reshape melt.data.frame
 ##' @importFrom GGally ggpairs
@@ -240,7 +240,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           rsltnx=ifelse(is.numeric(dat[,1]),resolution(dat[,1]),2.5)
           rsltny=ifelse(is.numeric(dat[,2]),resolution(dat[,2]),2.5)
           print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
-                      position=position_jitter(w=rsltnx/8,h=rsltny/8),
+                      position=position_jitter(width=rsltnx/8,height=rsltny/8),
                       size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) + 
                     theme(legend.position=legend.pos))
       } else {
@@ -254,7 +254,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                    icon = "error")
           return(TRUE)
       }
-      library(reshape)
+      library_call("reshape")
       dat = m$dat[[j]]
       if (m$parajitter == "Jitter on categorical variables") {
         rowz = nrow(dat)
@@ -702,16 +702,27 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     if (m$graphtype=="Pairwise Plots") {
       for (j in 1:k) {
           png(filename = paste(savename,'_',lab[j],'_pairwise.png',sep=''), width = 2*m$n, height = 2*m$n, units = "in", res=90)
-          graph_pair(j, 'right')
+          if (m$n>2 && any(m$colorby %in% gt11[m$name_select,2]) &&
+                !all(gt11[m$name_select,2][as.numeric(gt11[m$name_select,4])>0] %in% m$colorby) &&
+                m$imp_method %in% c('Below 10%','Simple') && lab[j]!='Random Value' ) {
+            graph_pair(j, 'right', 'cor')
+          } else {
+            graph_pair(j, 'right')
+          }
           dev.off()
       }
     }
     if (m$graphtype=="Parallel Coordinates") {
         for (j in 1:k) {
             if (!graph_pcp(j)) {
-                png(filename = paste(savename,'_',lab[j],'_pcp.png',sep=''),width = (m$n+2), height = 4, units = "in", res=90)
-                print(m$p)
+                png(filename = paste(savename,'_',lab[j],'_pcp_orig.png',sep=''),width = (m$n+2), height = 4, units = "in", res=90)
+                print(m$p+theme(legend.position='bottom'))
                 dev.off()
+            }
+            if (!graph_pcp(j,order='allClass')) {
+              png(filename = paste(savename,'_',lab[j],'_pcp_sort.png',sep=''),width = (m$n+2), height = 4, units = "in", res=90)
+              print(m$p+theme(legend.position='bottom'))
+              dev.off()
             }
         }
     }

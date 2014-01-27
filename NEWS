@@ -1,3 +1,16 @@
+Changes in Version 0.2-0
+
+NEW FEATURES
+
+  - Add new imputation methods (multiple imputations and nearest neighbors), re-arrange the widget for methods.
+
+  - Involve the tabs for the graphic device, which can display different methods or multiple chains in parallel.
+
+  - Add a new graph for parallel coordinates plot, which sorts the variables by F-statistics of ANOVA.
+
+  - Add a "Setting" tab to tune the parameters.
+
+
 Changes in Version 0.1-6
 
 Edit NAMESPACE by required.
