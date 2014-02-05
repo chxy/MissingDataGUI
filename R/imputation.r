@@ -152,6 +152,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             if (sum(complete.cases(origdata))==0) warning_message="All the observations have missing values. Cannot find the neighbors."
             if (any(c("factor","character") %in% vartype)) warning_message='Cannot impute by the neighbor with one or more factor or character variables.'
             gmessage(warning_message, icon='warning')
+            return(NULL)
         } else {
             dat$d2=dat$d1
             CmpltDat = dat$d1[complete.cases(dat$d1),]

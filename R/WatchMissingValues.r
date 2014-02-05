@@ -213,16 +213,48 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       m$Missing <- Missing[m$dat[[1]][,ncol(m$dat[[1]])]]
       return(FALSE)
   }
-  graph_hist = function(j, i, pos){
+  graph_hist = function(j, i){
       dat = m$dat[[j]]
       if (!(is.numeric(dat[,i]) | is.character(dat[,i]) | is.factor(dat[,i]))) return()
       tmpdat = data.frame(dat,Missing=m$Missing)
       p=qplot(tmpdat[,i],data=tmpdat,geom='histogram',fill=Missing,
-              position=pos, xlab=names(tmpdat)[i])
+              position='stack', xlab=names(tmpdat)[i])
       if (is.numeric(dat[,i])) suppressMessages(print(p))
       if (is.character(dat[,i])) suppressMessages(print(p+coord_flip()))
       if (is.factor(dat[,i]) &
           as.numeric(as.character(gt11[m$name_select,4]))[i]<1) suppressMessages(print(p+coord_flip()))
+  }
+  graph_spine = function(j, i){
+    dat = m$dat[[j]]
+    if (!(is.numeric(dat[,i]) | is.character(dat[,i]) | is.factor(dat[,i]))) return()
+    if (is.numeric(dat[,i])){
+      itv=pretty(dat[,i],n=10)
+      itvct=cut(dat[,i],itv)
+    } else {
+      itvct=dat[,i]
+    }
+    a=table(itvct,m$Missing)
+    b=matrix(a,ncol=2)
+    bsum=rowSums(b)
+    b1=apply(b,2,`/`,bsum)
+    b1sum=c(0,cumsum(bsum))
+    if (is.numeric(dat[,i])){
+      d1=data.frame(x1=b1sum[-length(b1sum)],x2=b1sum[-1],y1=0,y2=b1[,1],Missing='FALSE')
+      d2=data.frame(x1=b1sum[-length(b1sum)],x2=b1sum[-1],y1=b1[,1],y2=1,Missing='TRUE')
+      b1center=b1sum
+    } else {
+      b1center=b1sum[-length(b1sum)]+diff(b1sum)/2
+      b1width=diff(b1sum)*9/20
+      d1=data.frame(x1=b1center-b1width,x2=b1center+b1width,y1=0,y2=b1[,1],Missing='FALSE')
+      d2=data.frame(x1=b1center-b1width,x2=b1center+b1width,y1=b1[,1],y2=1,Missing='TRUE')
+      itv=rownames(a)
+    }
+    d=rbind(d1,d2)
+    p=ggplot(d, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2, fill=Missing))+geom_rect()+ 
+      scale_x_continuous(breaks=b1center, labels=itv)+
+      theme(panel.grid.minor.x = element_blank())+
+      xlab(colnames(dat)[i])+ylab("Proportion")
+    if (is.numeric(dat[,i])) suppressMessages(print(p)) else suppressMessages(print(p+coord_flip()))
   }
   graph_pair = function(j, legend.pos, uppercont='density'){
       if (m$n < 2) {
@@ -527,7 +559,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         size(m$glay151[[j+m$k]])=c(m$size[1],300*m$n)
           for (i in 1:m$n) {
               m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
-              graph_hist(j, i, "stack")
+              graph_hist(j, i)
           }
       }
     }
@@ -536,7 +568,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           size(m$glay151[[j+m$k]])=c(m$size[1],300*m$n)
             for (i in 1:m$n) {
                 m$glay151[[j+m$k]][i, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
-                graph_hist(j, i, "fill")
+                graph_spine(j, i)
             }
         }
     }
@@ -685,7 +717,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       for (j in 1:k) {
           for (i in 1:m$n) {
               png(filename = paste(savename,'_',lab[j],'_hist_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
-              graph_hist(j, i, 'identity')
+              graph_hist(j, i)
               dev.off()
           }
       }
@@ -694,7 +726,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       for (j in 1:k) {
           for (i in 1:m$n) {
               png(filename = paste(savename,'_',lab[j],'_spinogram_',i,'.png',sep=''),width = 7, height = 5,units = "in", res=90)
-              graph_hist(j, i, "fill")
+              graph_spine(j, i)
               dev.off()
           }
       }
