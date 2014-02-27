@@ -134,10 +134,14 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             if (vartype[i] %in% c('integer','numeric')) {
               dat$d1[is.na(dat$d1[,i]),i] = median(dat$d1[,i], na.rm=TRUE)
               dat$d2[is.na(dat$d2[,i]),i] = mean(dat$d2[,i], na.rm=TRUE)
-            } else {
+            } else if (vartype[i] %in% c('logical','factor','character')){
               biggroup = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
               dat$d1[origshadow[,i],i] = biggroup
               dat$d2[origshadow[,i],i] = biggroup
+            } else {
+              grouplevel = levels(dat$d1[,i])
+              dat$d1[origshadow[,i],i] = grouplevel[round(median(as.integer(dat$d1[,i]), na.rm=TRUE))]
+              dat$d2[origshadow[,i],i] = names(sort(table(na.omit(dat$d2[,i])),decreasing=TRUE))[1]
             }
             fill=sample(dat$d3[!origshadow[,i],i], sum(origshadow[,i]), replace = TRUE)
             dat$d3[origshadow[,i],i] = fill
