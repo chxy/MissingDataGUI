@@ -106,3 +106,165 @@ mice_default = function(vec, dat){
     res[colSums(is.na(dat))==0] = ""
     return(res)
 }
+
+##' Print ggpair object in GTK+ for Windows platform
+##' 
+##' See \code{print.ggpairs} from \pkg{GGally}. Only one line was changed.
+##' 
+##' @param x ggpair object to be plotted
+##' @param ... not used
+##' @return NULL
+##' @author Barret Schloerke <\email{schloerke@gmail.com}>, Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @import grid
+##' @importFrom GGally getPlot
+##' 
+winprint = function (x, ...) {
+  require(grid)
+  plotObj <- x
+  if (identical(plotObj$axisLabels, "internal")) {
+    v1 <- viewport(y = unit(0.5, "npc") - unit(0.5, "lines"),
+                   width = unit(1, "npc") - unit(1, "lines"),
+                   height = unit(1, "npc") - unit(2, "lines"))
+  }
+  else {
+    v1 <- viewport(width = unit(1, "npc") - unit(3, "lines"),
+                   height = unit(1, "npc") - unit(3, "lines"))
+  }
+  numCol <- length(plotObj$columns)
+  v2 <- viewport(layout = grid.layout(numCol, numCol, widths = rep(1, numCol), heights = rep(1, numCol)))
+  grid.newpage()
+  if (plotObj$title != "") {
+    pushViewport(viewport(height = unit(1, "npc") - unit(0.4, "lines")))
+    grid.text(plotObj$title, x = 0.5, y = 1, just = c(0.5, 1), gp = gpar(fontsize = 15))
+    popViewport()
+  }
+  if (!identical(plotObj$axisLabels, "internal")) {
+    pushViewport(viewport(width = unit(1, "npc") - unit(2, "lines"),
+                          height = unit(1, "npc") - unit(3, "lines")))
+    pushViewport(viewport(layout = grid.layout(numCol, numCol, widths = rep(1, numCol),
+                                               heights = rep(1, numCol))))
+    for (i in 1:numCol) {
+      grid.text(names(plotObj$data[, plotObj$columns])[i],
+                0, 0.5, rot = 90, just = c("centre", "centre"),
+                vp = vplayout(as.numeric(i), 1))
+    }
+    popViewport()
+    popViewport()
+    pushViewport(viewport(width = unit(1, "npc") - unit(3, "lines"),
+                          height = unit(1, "npc") - unit(2, "lines")))
+    pushViewport(viewport(layout = grid.layout(numCol, numCol, widths = rep(1, numCol),
+                                               heights = rep(1, numCol))))
+    for (i in 1:numCol) {
+      grid.text(names(plotObj$data[, plotObj$columns])[i],
+                0.5, 0, just = c("centre", "centre"), vp = vplayout(numCol, i))
+    }
+    popViewport()
+    popViewport()
+  }
+  pushViewport(v1)
+  pushViewport(v2)
+  for (rowPos in 1:numCol) {
+    for (columnPos in 1:numCol) {
+      p <- GGally::getPlot(plotObj, rowPos, columnPos)
+      if (!GGally:::is_blank_plot(p)) {
+        pos <- columnPos + (rowPos - 1) * numCol
+        type <- p$type
+        subType <- p$subType
+        if (plotObj$printInfo) {
+          cat("Pos #", pos)
+          if (!is.null(type))
+            cat(": type = ", type)
+          if (!is.null(subType))
+            cat(": subType = ", subType)
+          cat("\n")
+        }
+        noTicks <- c("internal", "none")
+        removeTicks <- plotObj$axisLabels %in% noTicks
+        if (!is.null(p$axisLabels)) {
+          removeTicks <- p$axisLabels %in% noTicks
+        }
+        if (columnPos != 1 || removeTicks) {
+          p <- p + theme(axis.text.y = element_blank(),
+                         axis.title.y = element_blank())
+        }
+        if ((rowPos != numCol) || removeTicks) {
+          p <- p + theme(#axis.text.x = element_blank(),
+            axis.title.x = element_blank())
+        }
+        if (removeTicks) {
+          p <- p + theme(strip.background = element_rect(fill = "white", colour = NA),
+                         strip.text.x = element_blank(), strip.text.y = element_blank(),
+                         axis.ticks = element_blank())
+        }
+        if (identical(p$type, "combo")) {
+          p <- p + labs(x = NULL, y = NULL)
+          if (plotObj$printInfo) {
+            print(p$subType)
+            print(p$horizontal)
+          }
+          if (p$horizontal) {
+            if (p$subType %in% c("facethist")) {
+              p <- p + theme(plot.margin = unit(c(0, -0.5, 0, 0), "lines"))
+            }
+            else {
+              p <- p + theme(plot.margin = unit(c(0, -0.5, 0, -0.5), "lines"))
+            }
+            if (columnPos != numCol) {
+              p <- p + theme(strip.background = element_blank(),
+                             strip.text.x = element_blank(), strip.text.y = element_blank())
+            }
+          }
+          else {
+            if (p$subType %in% c("facethist")) {
+              p <- p + theme(plot.margin = unit(c(-0.5, 0, 0, 0), "lines"))
+            }
+            else {
+              p <- p + theme(plot.margin = unit(c(-0.5, 0, -0.5, 0), "lines"))
+            }
+            if (rowPos != 1) {
+              p <- p + theme(strip.background = element_blank(),
+                             strip.text.x = element_blank(), strip.text.y = element_blank())
+            }
+          }
+        }
+        else if (identical(p$subType, "facetbar")) {
+          p <- p + labs(x = NULL, y = NULL) + theme(plot.margin = unit(c(0, -0.5, 0, 0), "lines"))
+          if (rowPos != 1) {
+            p <- p + theme(strip.background = element_blank(),
+                           strip.text.x = element_blank(), strip.text.y = element_blank())
+          }
+        }
+        else if (identical(p$type, "continuous") && !identical(p$subType, "cor")) {
+          p <- p + labs(x = NULL, y = NULL) + theme(plot.margin = unit(rep(0, 4), "lines"))
+        }
+        else if (identical(p$type, "diag") && is.numeric(p$data[, as.character(p$mapping$x)])) {
+          p <- p + labs(x = NULL, y = NULL) + theme(plot.margin = unit(rep(0, 4), "lines"))
+        }
+        else {
+          p <- p + labs(x = NULL, y = NULL) + theme(plot.margin = unit(rep(0, 4), "lines"))
+        }
+        showLegend = FALSE
+        if (!is.null(plotObj$legends))
+          showLegend <- identical(plotObj$legends, TRUE)
+        if (showLegend == FALSE) {
+          if (!is.null(p$ggally$legend) && !is.na(p$ggally$legend)) {
+            showLegend <- identical(p$ggally$legend, TRUE)
+          }
+        }
+        if (showLegend == FALSE) {
+          p <- p + theme(legend.position = "none")
+        }
+        grid.rect(gp = gpar(fill = "white", lty = "blank"),
+                  vp = GGally:::vplayout(rowPos, columnPos))
+        if (identical(plotObj$verbose, TRUE)) {
+          print(p, vp = GGally:::vplayout(rowPos, columnPos))
+        }
+        else {
+          suppressMessages(suppressWarnings(print(p, vp = GGally:::vplayout(rowPos, columnPos))))
+        }
+      }
+    }
+  }
+  popViewport()
+  popViewport()
+}

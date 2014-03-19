@@ -256,7 +256,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       xlab(colnames(dat)[i])+ylab("Proportion")
     if (is.numeric(dat[,i])) suppressMessages(print(p)) else suppressMessages(print(p+coord_flip()))
   }
-  graph_pair = function(j, legend.pos, uppercont='density'){
+  graph_pair = function(j, legend.pos, type, contour='id'){
       if (m$n < 2) {
           gmessage("You selected less than two variables! Please re-select.", icon = "error")
           return()
@@ -277,7 +277,20 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                     theme(legend.position=legend.pos))
       } else {
           dat$Missings=factor(m$Missing)[order(m$Missing)]
-          print(ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),upper=list(continuous=uppercont,combo='box',discrete='facetbar')))
+          if (contour == 'jitter'){
+            for (i in 1:m$n){
+              idx = which(is.na(m$dataset[,m$name_select[i]])[order(m$Missing)])
+              if (is.numeric(dat[,i]) & length(idx)) {
+                rsltn = diff(range(dat[,i],na.rm=TRUE))/1000
+                dat[idx,i] = dat[idx,i]+rnorm(length(idx),sd=rsltn)
+              }
+            }
+          }
+          m$p = ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),
+                        upper=list(continuous='density',combo='box',discrete='facetbar'))
+          if (.Platform$OS.type!='windows' || type=='save') {print(m$p)} else {
+            winprint(m$p)
+          }
       }
   }
   graph_pcp = function(j,...){
@@ -576,12 +589,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         for (j in 1:k) {
           size(m$glay151[[j+m$k]])=m$size
             m$glay151[[j+m$k]][1, 1, expand = TRUE] = ggraphics(container = m$glay151[[j+m$k]])
-          if (m$n>2 && any(m$colorby %in% gt11[m$name_select,2]) &&
-                !all(gt11[m$name_select,2][as.numeric(gt11[m$name_select,4])>0] %in% m$colorby) &&
-                m$imp_method %in% c('Below 10%','Simple') && lab[j]!='Random Value' ) {
-            graph_pair(j, 'bottom', 'cor')
+          if (m$n>2 && m$imp_method %in% c('Below 10%','Simple') && lab[j]!='Random Value' ) {
+            graph_pair(j, 'bottom', type='plot', contour='jitter')
           } else {
-            graph_pair(j, 'bottom')
+            graph_pair(j, 'bottom', type='plot')
           }
         }
     }
@@ -734,12 +745,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     if (m$graphtype=="Pairwise Plots") {
       for (j in 1:k) {
           png(filename = paste(savename,'_',lab[j],'_pairwise.png',sep=''), width = 2*m$n, height = 2*m$n, units = "in", res=90)
-          if (m$n>2 && any(m$colorby %in% gt11[m$name_select,2]) &&
-                !all(gt11[m$name_select,2][as.numeric(gt11[m$name_select,4])>0] %in% m$colorby) &&
-                m$imp_method %in% c('Below 10%','Simple') && lab[j]!='Random Value' ) {
-            graph_pair(j, 'right', 'cor')
+          if (m$n>2 && m$imp_method %in% c('Below 10%','Simple') && lab[j]!='Random Value' ) {
+            graph_pair(j, 'right', type='save', contour='jitter')
           } else {
-            graph_pair(j, 'right')
+            graph_pair(j, 'right',type='save')
           }
           dev.off()
       }
