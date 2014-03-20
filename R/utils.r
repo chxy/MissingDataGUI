@@ -109,17 +109,16 @@ mice_default = function(vec, dat){
 
 ##' Print ggpair object in GTK+ for Windows platform
 ##' 
-##' See \code{print.ggpairs} from \pkg{GGally}. Only one line was changed.
+##' See \code{print.ggpairs} from \pkg{GGally}.
 ##' 
 ##' @param x ggpair object to be plotted
 ##' @param ... not used
 ##' @return NULL
-##' @author Barret Schloerke <\email{schloerke@gmail.com}>, Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @author Barret Schloerke <\email{schloerke@@gmail.com}>, Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @import grid
 ##' @importFrom GGally getPlot
 ##' 
 winprint = function (x, ...) {
-  require(grid)
   plotObj <- x
   if (identical(plotObj$axisLabels, "internal")) {
     v1 <- viewport(y = unit(0.5, "npc") - unit(0.5, "lines"),
@@ -146,7 +145,7 @@ winprint = function (x, ...) {
     for (i in 1:numCol) {
       grid.text(names(plotObj$data[, plotObj$columns])[i],
                 0, 0.5, rot = 90, just = c("centre", "centre"),
-                vp = vplayout(as.numeric(i), 1))
+                vp = viewport(layout.pos.row = as.numeric(i), layout.pos.col = 1))
     }
     popViewport()
     popViewport()
@@ -156,7 +155,8 @@ winprint = function (x, ...) {
                                                heights = rep(1, numCol))))
     for (i in 1:numCol) {
       grid.text(names(plotObj$data[, plotObj$columns])[i],
-                0.5, 0, just = c("centre", "centre"), vp = vplayout(numCol, i))
+                0.5, 0, just = c("centre", "centre"),
+                vp = viewport(layout.pos.row = numCol, layout.pos.col = i))
     }
     popViewport()
     popViewport()
@@ -165,8 +165,11 @@ winprint = function (x, ...) {
   pushViewport(v2)
   for (rowPos in 1:numCol) {
     for (columnPos in 1:numCol) {
-      p <- GGally::getPlot(plotObj, rowPos, columnPos)
-      if (!GGally:::is_blank_plot(p)) {
+      p <- getPlot(plotObj, rowPos, columnPos)
+      p_cond <- if( !is.null(p$subType) && !is.null(p$type)){
+        p$subType == "blank" && p$type == "blank"
+      } else {FALSE}
+      if (!p_cond) {
         pos <- columnPos + (rowPos - 1) * numCol
         type <- p$type
         subType <- p$subType
@@ -256,12 +259,12 @@ winprint = function (x, ...) {
           p <- p + theme(legend.position = "none")
         }
         grid.rect(gp = gpar(fill = "white", lty = "blank"),
-                  vp = GGally:::vplayout(rowPos, columnPos))
+                  vp = viewport(layout.pos.row = rowPos, layout.pos.col = columnPos))
         if (identical(plotObj$verbose, TRUE)) {
-          print(p, vp = GGally:::vplayout(rowPos, columnPos))
+          print(p, vp = viewport(layout.pos.row = rowPos, layout.pos.col = columnPos))
         }
         else {
-          suppressMessages(suppressWarnings(print(p, vp = GGally:::vplayout(rowPos, columnPos))))
+          suppressMessages(suppressWarnings(print(p, vp = viewport(layout.pos.row = rowPos, layout.pos.col = columnPos))))
         }
       }
     }

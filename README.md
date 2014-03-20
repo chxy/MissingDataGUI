@@ -1,4 +1,5 @@
 A GUI for Missing Data Exploration
+============
 
 Install
 ------------

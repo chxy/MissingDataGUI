@@ -45,7 +45,6 @@
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 ##' @import ggplot2 cairoDevice gWidgetsRGtk2
-##' @importFrom grid viewport
 ##' @importFrom reshape melt.data.frame
 ##' @importFrom GGally ggpairs
 ##' @importFrom GGally ggparcoord
