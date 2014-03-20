@@ -189,6 +189,7 @@ winprint = function (x, ...) {
         }
         if ((rowPos != numCol) || removeTicks) {
           p <- p + theme(#axis.text.x = element_blank(),
+            axis.text.x = element_text(colour = "white"),
             axis.title.x = element_blank())
         }
         if (removeTicks) {
