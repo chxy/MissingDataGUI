@@ -194,11 +194,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           m$dat = list(Imported=data.frame(m$imp_dat[,c(gt11[m$name_select,2])],m$imp_dat[,ncol(m$imp_dat)]))
       }
       
-      for (j in 1:length(m$dat)){
-          for (i in 1:m$n){
-              eval(parse(text=paste("m$dat[[j]][,i]=as.",as.character(gt11[m$name_select,3])[i],"(as.character(m$dat[[j]][,i]))",sep="")))
-          }
-      }
+#       for (j in 1:length(m$dat)){
+#           for (i in 1:m$n){
+#               eval(parse(text=paste("m$dat[[j]][,i]=as.",as.character(gt11[m$name_select,3])[i],"(as.character(m$dat[[j]][,i]))",sep="")))
+#           }
+#       }
       
       if (m$colorby[1]=='Missing on Selected Variables') {
           Missing <- !complete.cases(m$dataset[,gt11[m$name_select,2]])
