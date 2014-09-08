@@ -12,9 +12,9 @@
 ##' Under this status the selected conditioning variables are 
 ##' ignored. If the data are already imputed, then this item 
 ##' will show the imputed result. (2) 'Simple' will create three 
-##' tabs: Median, Mean/Mode, and Random Value. 'Median' means NA's will be 
+##' tabs: Median, Mean, and Random Value. 'Median' means NA's will be 
 ##' replaced by the median of this variable (omit NA's). 
-##' 'Mean/Mode' means NA's will be replaced by the mean of the 
+##' 'Mean' means NA's will be replaced by the mean of the 
 ##' variable (omit NA's) if it is quantitative, and by the 
 ##' mode of the variable (omit NA's) if it is categorical. 
 ##' 'Random Value' means NA's will be replaced by any values 
@@ -147,7 +147,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             dat$d3[origshadow[,i],i] = fill
           }
         }
-        names(dat)=c('Median','Mean/Mode','Random Value')
+        names(dat)=c('Median','Mean','Random Value')
     }
     else if (method == 'Neighbor') {
         set.seed(mi.seed)
