@@ -247,7 +247,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     }
     else if (method == 'MI:mi') {
       library_gui('mi')
-        f = mi(origdata, n.imp=mi.n, seed=mi.seed)
+        f = mi(origdata, n.imp=max(mi.n,2), seed=mi.seed)
         tmpres = f@imp
         for (j in 1:mi.n){
           dat[[j]] = origdata
