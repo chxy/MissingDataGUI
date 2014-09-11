@@ -34,6 +34,7 @@
 ##' minimal is 600.
 ##' @return NULL
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @export
 ##' @examples
 ##' if (interactive()) {
 ##' MissingDataGUI()

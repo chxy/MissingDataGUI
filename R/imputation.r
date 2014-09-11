@@ -15,8 +15,9 @@
 ##' tabs: Median, Mean, and Random Value. 'Median' means NA's will be 
 ##' replaced by the median of this variable (omit NA's). 
 ##' 'Mean' means NA's will be replaced by the mean of the 
-##' variable (omit NA's) if it is quantitative, and by the 
-##' mode of the variable (omit NA's) if it is categorical. 
+##' variable (omit NA's). The median does not apply to the nominal
+##' variable, neither does the mean to the categorical variable.
+##' In these cases the mode (omit NA's) is provided. 
 ##' 'Random Value' means NA's will be replaced by any values 
 ##' of this variable (omit NA's) which are randomly selected. 
 ##' (3) 'Neighbor' contains two methods: 'Average Neighbor' and 
@@ -70,6 +71,7 @@
 ##' function, rows may be exchanged, thus a column of row number could
 ##' keep track of the original row number and then help to find the
 ##' shadow matrix.
+##' @export
 ##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
 imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL){
     if (is.null(origdata)) return(NULL)
