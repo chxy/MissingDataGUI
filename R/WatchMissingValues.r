@@ -335,10 +335,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       q2=qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing,main='Sorted by the number of missing in variables and observations')
       
       dist31=dist(Mapdat[,-(m$n+1)])
-      order31=hclust(dist31,"ward")$order
+      order31=hclust(dist31,"ward.D")$order
       Mapdat3=Mapdat[order31,-(m$n+1)]
       dist32=dist(t(Mapdat[,-(m$n+1)]))
-      order32=hclust(dist32,"ward")$order
+      order32=hclust(dist32,"ward.D")$order
       Mapdat3=Mapdat3[,order32]
       Mapdat3$Reordered_Observation=1:nrow(Mapdat3)
       mapdat=melt.data.frame(Mapdat3[,],"Reordered_Observation")
