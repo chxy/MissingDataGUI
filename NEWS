@@ -1,3 +1,10 @@
+Changes in Version 0.2-1
+
+  - In the 'Simple' method, 'Mean/Mode' is renamed by 'Mean'. Mode applies when median or mean does not work.
+  - Update the parameter for hclust (from 'ward' to 'ward.D')
+  - mi from the mi package only accepts n.imp>1, so we set n.imp=2 when the actual input is 1, and take the first set as the result.
+
+
 Changes in Version 0.2-0
 
 NEW FEATURES

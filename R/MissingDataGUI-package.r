@@ -7,7 +7,6 @@
 ##'
 ##' @name MissingDataGUI-package
 ##' @docType package
-##' @exportPattern "^[^\\.]"
 ##' @examples
 ##' if (interactive()) {
 ##' MissingDataGUI()
