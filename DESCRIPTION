@@ -5,7 +5,7 @@ Version: 0.2-2
 Date: 2014-09-14
 Author: Xiaoyue Cheng, Dianne Cook, Heike Hofmann
 Maintainer: Xiaoyue Cheng <xycheng@iastate.edu>
-Description: This package provides numeric and graphical
+Description: Provides numeric and graphical
     summaries for the missing values from both categorical
     and quantitative variables. A variety of imputation
     methods are applied, including the univariate imputations

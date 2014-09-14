@@ -1,4 +1,4 @@
-Changes in Version 0.2-1
+Changes in Version 0.2-2
 
   - In the 'Simple' method, 'Mean/Mode' is renamed by 'Mean'. Mode applies when median or mean does not work.
   - Update the parameter for hclust (from 'ward' to 'ward.D')
