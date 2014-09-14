@@ -126,7 +126,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       m$graphtype=svalue(gr143)
       cond=check123[svalue(check123,index=T)]
       idx_cond = if (length(cond)) (cond %in% gt11[m$name_select,2]) else FALSE
-      if (any(idx_cond) && any((gt11[(gt11[,2] %in% cond[idx_cond]),3])>0)) {
+      if (any(idx_cond) && any((gt11[(gt11[,2] %in% cond[idx_cond]),3])>0) && m$graphtype != "Missingness Map") {
         gmessage("At least one of the conditional variables contains missing values and is selected to be imputed.\n\nWe will unselect the variable(s).\n\nTip: please impute the conditional variable before conditioning on it.",icon='warning')
         miss_cond = gt11[(gt11[,2] %in% cond[idx_cond]),1]
         svalue(gt11) = setdiff(m$name_select, miss_cond)
@@ -273,7 +273,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           rsltny=ifelse(is.numeric(dat[,2]),resolution(dat[,2]),2.5)
           print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
                       position=position_jitter(width=rsltnx/8,height=rsltny/8),
-                      size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) + 
+                      size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) +
                     theme(legend.position=legend.pos))
       } else {
           dat$Missings=factor(m$Missing)[order(m$Missing)]
@@ -303,11 +303,15 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       dat = m$dat[[j]]
       if (m$parajitter == "Jitter on categorical variables") {
         rowz = nrow(dat)
-        for (i in which(sapply(dat[,1:m$n],class) %in% c('logical','factor','ordered','character'))) {
+        for (i in which(sapply(lapply(dat[,1:m$n],class),`[`,1) %in% c('logical','factor','ordered','character'))) {
           if (is.character(dat[,i])) dat[,i]=factor(dat[,i])
           dat[,i] = as.integer(dat[,i])
           set.seed(m$mi_seed)
           dat[,i] = dat[,i] + runif(rowz, -0.1, 0.1)
+        }
+      } else {
+        for (i in which(sapply(lapply(dat[,1:m$n],class),`[`,1) == 'ordered')) {
+          dat[,i] = as.integer(dat[,i])
         }
       }
       dat$Missing = m$Missing
