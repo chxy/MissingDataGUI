@@ -164,7 +164,11 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             CmpltDat = dat$d1[complete.cases(dat$d1),]
             orderedfactor = which(vartype=="ordered")
             if (length(orderedfactor)) {
-                for (j in orderedfactor) CmpltDat[,j]=as.integer(CmpltDat[,j])
+              for (j in orderedfactor) {
+                CmpltDat[,j]=as.integer(CmpltDat[,j])
+                dat$d1[,j]=as.integer(dat$d1[,j])
+                dat$d2[,j]=as.integer(dat$d2[,j])
+              }
             }
             for (i in which(!complete.cases(dat$d1))){
                 usecol = which(!is.na(dat$d1[i,]))
@@ -198,12 +202,12 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
             return(NULL)
         } else {
           library_gui('norm')
-            s = prelim.norm(as.matrix(origdata))
-            thetahat = em.norm(s)
-            rngseed(mi.seed)
-            theta = da.norm(s,thetahat,steps=10,showits=TRUE)
+            s = norm::prelim.norm(as.matrix(origdata))
+            thetahat = norm::em.norm(s)
+            norm::rngseed(mi.seed)
+            theta = norm::da.norm(s,thetahat,steps=10,showits=TRUE)
             for (i in 1:mi.n){
-              dat[[i]] = imp.norm(s,theta,as.matrix(origdata))
+              dat[[i]] = norm::imp.norm(s,theta,as.matrix(origdata))
             }
             names(dat)=paste('norm',1:mi.n)
             if (any(sapply(dat,function(x){any(c(Inf,NaN) %in% x)}))) {
@@ -220,7 +224,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
           library_gui('Hmisc')
             formula0 = as.formula(paste('~ ',paste(names(origdata),collapse=' + ')))
             set.seed(mi.seed)
-            f = aregImpute(formula0, data=origdata, n.impute=mi.n)
+            f = Hmisc::aregImpute(formula0, data=origdata, n.impute=mi.n)
             tmpres = f$imputed
             tmpres = tmpres[!sapply(tmpres,is.null)]
             for (i in 1:mi.n) {
@@ -235,7 +239,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     else if (method == 'MI:mice') {
       library_gui('mice')
       if (is.null(attr(method,'method'))) attr(method,'method')=vector("character", length = ncol(data))
-        f = mice(origdata, method=attr(method,'method'), m=mi.n, printFlag=FALSE, seed=mi.seed)
+        f = mice::mice(origdata, method=attr(method,'method'), m=mi.n, printFlag=FALSE, seed=mi.seed)
         tmpres = f$imp
         for (j in 1:mi.n){
           dat[[j]] = origdata
@@ -247,7 +251,7 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     }
     else if (method == 'MI:mi') {
       library_gui('mi')
-        f = mi(origdata, n.imp=max(mi.n,2), seed=mi.seed)
+        f = mi::mi(origdata, n.imp=max(mi.n,2), seed=mi.seed)
         tmpres = f@imp
         for (j in 1:mi.n){
           dat[[j]] = origdata
