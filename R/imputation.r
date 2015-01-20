@@ -251,15 +251,9 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     }
     else if (method == 'MI:mi') {
       library_gui('mi')
-        f = mi::mi(origdata, n.imp=max(mi.n,2), seed=mi.seed)
-        tmpres = f@imp
-        for (j in 1:mi.n){
-          dat[[j]] = origdata
-          for (i in 1:length(tmpres[[j]])) {
-            dat[[j]][names(tmpres[[j]][[i]]@random),names(tmpres[[j]])[i]]=tmpres[[j]][[i]]@random
-          }
-        }
-        names(dat)=paste('mi',1:mi.n)
+        f = mi::mi(origdata, seed=mi.seed)
+        dat = mi::complete(f, m = max(mi.n, 2), include_missing = FALSE)
+        names(dat)=paste('mi',1:max(mi.n, 2))
     }
     res = lapply(dat, function(x) data.frame(x, row_number=row_NO))
     return(res)
