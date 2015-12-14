@@ -7,7 +7,7 @@
 ##'
 ##' @name MissingDataGUI-package
 ##' @docType package
-##' @references Xiaoyue Cheng, Dianne Cook, Heike Hofmann (2015). Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface. Journal of Statistical Software, 68(6), 1-23. doi:10.18637/jss.v068.i06 (The DOI will be registered after publication on CRAN)
+##' @references Xiaoyue Cheng, Dianne Cook, Heike Hofmann (2015). Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface. Journal of Statistical Software, 68(6), 1-23. doi:10.18637/jss.v068.i06
 ##' @examples
 ##' if (interactive()) {
 ##' MissingDataGUI()
