@@ -7,7 +7,7 @@
 ##'
 ##' @name MissingDataGUI-package
 ##' @docType package
-##' @references Xiaoyue Cheng, Dianne Cook, Heike Hofmann (2015). Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface. Journal of Statistical Software, 68(6), 1-23. doi:10.18637/jss.v068.i06
+##' @references Xiaoyue Cheng, Dianne Cook, Heike Hofmann (2015). Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface. Journal of Statistical Software, 68(6), 1-23. doi:10.18637/jss.v068.i06 (The DOI will be registered after publication on CRAN)
 ##' @examples
 ##' if (interactive()) {
 ##' MissingDataGUI()
@@ -191,7 +191,7 @@ NULL
 ##' @name brfss
 ##' @docType data
 ##' @usage data(brfss)
-##' @source \url{http://www.cdc.gov/BRFSS/technical_infodata/surveydata/2009.htm}
+##' @source \url{http://www.cdc.gov/brfss/data_documentation/index.htm}
 ##' @keywords datasets
 ##' @examples
 ##' if (interactive()) {

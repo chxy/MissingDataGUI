@@ -18,7 +18,7 @@
 
 
 \author{Xiaoyue Cheng%
-\thanks{Email: xycheng@iastate.edu%
+\thanks{Email: xycheng@unomaha.edu%
 } \and Dianne Cook \and Heike Hofmann\\
  Department of Statistics, Iowa State University}
 
