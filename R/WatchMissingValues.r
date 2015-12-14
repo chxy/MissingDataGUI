@@ -37,13 +37,13 @@
 ##' GUI. If it is null, then parameter gt must not be null.
 ##' @param gt A widget created by gtable(). It should be passed from
 ##' \code{\link{MissingDataGUI}}.
-##' @param size.width the width of window. Default to be 1000, and the 
+##' @param size.width the width of window. Default to be 1000, and the
 ##' minimal is 800.
 ##' @param size.height the height of window. Default to be 750, and the
 ##' minimal is 600.
 ##' @param ... Other parameters to be passed to this function.
 ##' @return NULL
-##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @author Xiaoyue Cheng <\email{xycheng@@unomaha.edu}>
 ##' @import ggplot2 cairoDevice gWidgetsRGtk2
 ##' @importFrom reshape melt.data.frame
 ##' @importFrom GGally ggpairs
@@ -62,10 +62,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     gmessage("There's no input.", icon="error")
     return()
   }
-  
+
   m = new.env()
   m$group151 = m$glay151 = list()
-  
+
   if (is.null(data)) {
     if (length(svalue(gt)) == 0) {
       gtfile = gt[1,]
@@ -76,35 +76,35 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   } else {
     dataset = data
   }
-  
+
   rows = nrow(dataset)
   cols = ncol(dataset)
   halfcol = as.integer(cols/2)
   dataclass = as.character(sapply(dataset, function(x) class(x)[1]))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
-  
+
   if (sum(vNApct)==0) {
     if (cols%%2==0) {
       chr_shadowmatrix = unlist(sapply(dataset[,(halfcol+1):cols],as.character))
-      if (all(dataclass[(halfcol+1):cols]=="logical") | 
-        all(chr_shadowmatrix %in% c("TRUE","FALSE")) | 
+      if (all(dataclass[(halfcol+1):cols]=="logical") |
+        all(chr_shadowmatrix %in% c("TRUE","FALSE")) |
         all(chr_shadowmatrix %in% c("0","1"))) {
         imp_dat = data.frame(dataset[,1:halfcol],row_number=1:rows)
         tmp = dataset[,1:halfcol]
         tmp[sapply(dataset[,(halfcol+1):cols],as.logical)] = NA
         dataset = tmp
         is_imputed_data = TRUE
-        gmessage(paste('There are no missing values in this data set. The last', halfcol, 
+        gmessage(paste('There are no missing values in this data set. The last', halfcol,
                        'columns are used as the shadow matrix.'), icon = "info")
       } else {
         is_imputed_data = FALSE
-        gmessage('There are no missing values in this data set. If the data is combined 
+        gmessage('There are no missing values in this data set. If the data is combined
                   with a shadow matrix, then the number of columns of the shadow matrix
                   is not the same as original data.', icon = "error")
       }
     } else {
       is_imputed_data = FALSE
-      gmessage('There are no missing values in this data set. If the data is combined 
+      gmessage('There are no missing values in this data set. If the data is combined
                 with a shadow matrix, then the number of columns of the shadow matrix
                 is not the same as original data.', icon = "error")
     }
@@ -114,7 +114,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   NAcol = which(sapply(dataset, function(avec){all(is.na(avec))}))
   vNApct = sapply(dataset, function(avec){mean(is.na(avec))})
   m$dataset = dataset
-  
+
   #####------------------------------------#####
   ##  Graph and SavePlot share too much code  ##
   ##  So I made the following functions       ##
@@ -181,26 +181,26 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           return(TRUE)
         } else {return(FALSE)}
       }
-      
+
       if ( (!exists('imp_dat',envir=m))  || m$graphtype!="Below 10%" ) {
           m$dat = imputation(origdata=m$dataset[,gt11[m$name_select,2],drop=FALSE],
                       method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                       missingpct=as.numeric(as.character(gt11[m$name_select,4])),
                       condition=m$cond,knn=m$nn_k,mi.n=m$mi_n,mi.seed=m$mi_seed)
-          if (all(sapply(m$dat,nrow)==0)) return(TRUE)          
+          if (all(sapply(m$dat,nrow)==0)) return(TRUE)
           for (j in 1:length(m$dat)) {
             m$dat[[j]]=m$dat[[j]][,c(gt11[m$name_select,2],'row_number'),drop=FALSE]
           }
       } else {
           m$dat = list(Imported=data.frame(m$imp_dat[,c(gt11[m$name_select,2])],m$imp_dat[,ncol(m$imp_dat)]))
       }
-      
+
 #       for (j in 1:length(m$dat)){
 #           for (i in 1:m$n){
 #               eval(parse(text=paste("m$dat[[j]][,i]=as.",as.character(gt11[m$name_select,3])[i],"(as.character(m$dat[[j]][,i]))",sep="")))
 #           }
 #       }
-      
+
       if (m$colorby[1]=='Missing on Selected Variables') {
           Missing <- !complete.cases(m$dataset[,gt11[m$name_select,2]])
       } else {
@@ -250,7 +250,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       itv=rownames(a)
     }
     d=rbind(d1,d2)
-    p=ggplot(d, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2, fill=Missing))+geom_rect()+ 
+    p=ggplot(d, aes(xmin = x1, xmax = x2, ymin = y1, ymax = y2, fill=Missing))+geom_rect()+
       scale_x_continuous(breaks=b1center, labels=itv)+
       theme(panel.grid.minor.x = element_blank())+
       xlab(colnames(dat)[i])+ylab("Proportion")
@@ -328,7 +328,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
       q1=qplot(observation,variable,data=mapdat,geom='tile',fill=Missing,main='Original Missingness Map')
-      
+
       Mapdat2=Mapdat[order(rowSums(Mapdat[,-(m$n+1)]),decreasing=TRUE),]
       Mapdat2=Mapdat2[,order(colSums(Mapdat2),decreasing=TRUE)]
       Mapdat2$Reordered_Observation=1:nrow(Mapdat2)
@@ -337,7 +337,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
       q2=qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing,main='Sorted by the number of missing in variables and observations')
-      
+
       dist31=dist(Mapdat[,-(m$n+1)])
       order31=hclust(dist31,"ward.D")$order
       Mapdat3=Mapdat[order31,-(m$n+1)]
@@ -350,10 +350,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       mapdat$variable=factor(mapdat$variable,levels=rev(levels(mapdat$variable)),
                              labels=rev(levels(mapdat$variable)))
       q3=qplot(Reordered_Observation,variable,data=mapdat,geom='tile',fill=Missing,main='Sorted by hierarchical clustering of missingness')
-      
+
       return(list(q1=q1,q2=q2,q3=q3))
   }
-  
+
   #####------------------------------------------------------#####
   ##  VariableOptions is the handler when double clicking gt4.  ##
   ##  It gives a new window for                                 ##
@@ -367,13 +367,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     gt11input1 = ggroup(container = gt11input0, expand = TRUE)
     gt11input11 = glabel("Name:", container = gt11input1)
     gt11input12 = gedit(text = svalue(gt11), container = gt11input1, expand = TRUE)
-    
+
     gt11input2 = ggroup(container = gt11input0, expand = TRUE)
     gt11input21 = glabel("Class:", container = gt11input2)
-    gt11input22 = gcombobox(union(gt11[svalue(gt11, index = TRUE),3], 
+    gt11input22 = gcombobox(union(gt11[svalue(gt11, index = TRUE),3],
                             c("integer", "numeric", "logical", "character", "factor", "ordered")),
                             container = gt11input2, expand = TRUE)
-    
+
     gt11input3 = ggroup(container = gt11input0, expand = TRUE)
     gt11input31 = gbutton("Ok", container = gt11input3, expand = TRUE,
                           handler = function(h, ...) {
@@ -384,7 +384,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                               tmpcolorby[tmpcolorby==as.character(gt11[idx, 2])]=svalue(gt11input12)
                               gt11[idx, 2] = svalue(gt11input12)
                               if (svalue(gt11input22) == 'logical') {
-                                  if (all(as.character(m$dataset[,idx]) 
+                                  if (all(as.character(m$dataset[,idx])
                                           %in% c('0','1','FALSE','TRUE',NA))) {
                                       m$dataset[,idx] = as.logical(as.character(m$dataset[,idx]))
                                   } else {
@@ -392,7 +392,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                                       svalue(gt11input22) = gt11[idx, 3]
                                   }
                               }
-                              if (svalue(gt11input22) == 'numeric') { 
+                              if (svalue(gt11input22) == 'numeric') {
                                   if (any(tryCatch(na.omit(as.numeric(as.character(m$dataset[,idx]))), warning=function(w){return('warning')})=="warning")) {
                                       gmessage("It cannot be converted to a numeric variable.")
                                       svalue(gt11input22) = gt11[idx, 3]
@@ -458,7 +458,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                             dispose(gt11input)
                           })
   }
-  
+
   #####----------------------------------------------------#####
   ##  miceMethod is the handler when double clicking gt3421.  ##
   ##  It gives a new window for                               ##
@@ -472,7 +472,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     gt34input0 = ggroup(horizontal = FALSE, container = gt34input,
                         expand = TRUE)
     gt34input1 = ggroup(container = gt34input0, expand = TRUE, horizontal=FALSE)
-    
+
     gt34input11 = glabel(paste("Name:",gt3421[k,2],"\nClass:",gt3421[k,3],"\nMethod for mice imputation:"), container = gt34input1)
     possible_methods = list(numeric=c('pmm','norm','norm.nob','norm.boot','norm.predict','mean','quadratic','cart','ri','sample'),
                             level2=c('pmm','2lonly.pmm','logreg','logreg.boot','cart','sample'),
@@ -482,7 +482,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     s2 = switch(s1,'pmm'=1,'logreg'=2,'polyreg'=3,'polr'=4)
     valid_methods = union(gt3421[k,4], possible_methods[[s2]])
     gt34input12 = gcombobox(valid_methods, container = gt34input1, expand = TRUE)
-    
+
     gt34input2 = ggroup(container = gt34input0, expand = TRUE)
     gt34input21 = gbutton("Ok", container = gt34input2, expand = TRUE,
                           handler = function(h, ...) {
@@ -492,7 +492,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     gt34input22 = gbutton("Cancel", container = gt34input2, expand = TRUE,
                           handler = function(h, ...) {dispose(gt34input)})
   }
-  
+
   #####------------------------------#####
   ##  NumSmry is the handler of gb145.  ##
   ##  (gbutton: Numeric Summary)        ##
@@ -506,7 +506,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     }
     tmp = m$dataset[,gt11[name_select,2],drop=FALSE]
     cond=check123[svalue(check123,index=T)]
-    
+
     if (length(cond)==0) {
         l = m$dataset[1,,drop=FALSE]
     } else {
@@ -529,7 +529,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
             groupN[[i]] = gframe(text = paste(paste(cond,unlist(l[i,]),sep='='),collapse=','),
                                  container = condgroup0, horizontal = FALSE, expand = TRUE)
         }
-        numsummary = compute_missing_pct(tmpset)        
+        numsummary = compute_missing_pct(tmpset)
         labelN11[[i]] = glabel('Missing:', container=groupN[[i]], pos=0)
         labelN12[[i]] = glabel(paste("    ",round(numsummary$totalmissingpct*100,2),
                                      "% of the numbers",sep=""), container=groupN[[i]])
@@ -537,40 +537,40 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                                      "% of variables",sep=""), container=groupN[[i]])
         labelN14[[i]] = glabel(paste("    ",round(numsummary$casemissingpct*100,2),
                                      "% of samples",sep=""), container=groupN[[i]])
-        
+
         groupN15[[i]]= ggroup(container = groupN[[i]], use.scrollwindow = TRUE,
                               horizontal = FALSE, expand = TRUE)
         tableN15[[i]] = gtable(numsummary$missingsummary, container=groupN15[[i]], expand = TRUE)
     }
   }
-  
+
   #####----------------------------#####
   ##  Graph is the handler of gb144.  ##
   ##  (gbutton: Watch the data)       ##
   #####----------------------------#####
   Graph = function(h,...) {
     # graphics.off()
-    
+
     if (!exists('k', envir = m)) m$k = 0
     # l = length(glay15[1,1])
     # if (l>0) for (i in 1:l) dispose(glay15[1,1])
-    
+
     initializ()
     if(initial_plot()) return()
-    
+
     if (m$graphtype == "Missingness Map") {
         lab = "Map"; k=1
     } else {
         lab = names(m$dat); k = length(m$dat)
     }
-    
+
     for (j in 1:k) {
         m$group151[[j+m$k]] = ggroup(container = glay15, label = lab[j], expand = TRUE, horizontal = FALSE)
         m$glay151[[j+m$k]] = glayout(container = m$group151[[j+m$k]], use.scrollwindow = TRUE)
     }
-    
+
     m$size = size(combo1)*c(.1,1)-c(10,255)
-    
+
     if (m$graphtype=="Histogram/Barchart") {
       for (j in 1:k) {
         size(m$glay151[[j+m$k]])=c(m$size[1],300*m$n)
@@ -626,22 +626,22 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
     # svalue(glay15[1,1])=1
     m$k = m$k + k
   }
-  
+
   #####---------------------------------#####
   ##  ExportData is the handler of gb146.  ##
   ##  (gbutton: Export the data)           ##
   #####---------------------------------#####
   ExportData = function(h,...){
-      
+
       initializ()
-      
+
       if (m$n == 0) {
           svalue(gt11) = 1:nrow(gt11)
           m$name_select = svalue(gt11, index = TRUE)
           m$n = length(m$name_select)
           gmessage("All variables are selected to export.")
       }
-      
+
       dat = imputation(origdata=m$dataset[,gt11[m$name_select,2],drop=FALSE],
                        method=m$imp_method, vartype=as.character(gt11[m$name_select,3]),
                        missingpct=as.numeric(as.character(gt11[m$name_select,4])),
@@ -652,14 +652,14 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           colnames(x) = c(gt11[m$name_select,2],paste('Missing', gt11[m$name_select,2], sep='_'))
           return(x)
           })
-      
+
       entire_dat = dat
       for (j in 1:length(dat)) {
           entire_dat[[j]] = data.frame(m$dataset,is.na(m$dataset))
           colnames(entire_dat[[j]])=c(colnames(m$dataset),paste('Missing',colnames(m$dataset),sep='_'))
           entire_dat[[j]][,colnames(dat[[j]])] = dat[[j]]
       }
-    
+
     ExpData = function(opa,opb){
         opa = svalue(opa)
         opb = svalue(opb)
@@ -668,7 +668,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         if (opa=='All columns' && !opb) return(lapply(entire_dat, function(x) x[,1:ncol(m$dataset)]))
         if (opa=='Selected columns' && !opb) return(lapply(dat, function(x) x[,1:m$n]))
     }
-    
+
     gExport = gwindow("Export Options", visible = T, width = 300, height = 200, parent = combo1)
     ExGroup = ggroup(container = gExport, expand = TRUE, horizontal = FALSE)
     ExFrame = gframe(text = "Export", container = ExGroup)
@@ -714,7 +714,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         dispose(gExport)
         })
   }
-  
+
   #####---------------------------------#####
   ##  ExportData is the handler of gb148.  ##
   ##  (gbutton: Save the plot)             ##
@@ -776,17 +776,17 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
         png(filename = paste(savename,'_map_1.png',sep=''),width = 6, height = max(4,round(m$n/8)), units = "in", res=90)
         print(q$q1)
         dev.off()
-        
+
         png(filename = paste(savename,'_map_2.png',sep=''),width = 6, height = max(4,round(m$n/8)), units = "in", res=90)
         print(q$q2)
         dev.off()
-        
+
         png(filename = paste(savename,'_map_3.png',sep=''),width = 6, height = max(4,round(m$n/8)), units = "in", res=90)
         print(q$q3)
         dev.off()
     }
   }
-  
+
   #####-------------------------------#####
   ##  New window for missing values      ##
   #####-------------------------------#####
@@ -796,7 +796,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   if (size.width/size.height > 2) size.width = size.height * 2
   combo1 <- gwindow("Missing Values", visible = T, width = size.width, height = size.height)
   tab <- gnotebook(container = combo1)
-  
+
   #####------------------------------------------------#####
   ##  In the first tab we can:                            ##
   ##  (1) Watch and change the name or type of variables. ##
@@ -815,12 +815,12 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   gt11 = gtable(nametable, multiple = T, container = group12,
                 expand = TRUE, chosencol = 2)
   addhandlerdoubleclick(gt11, handler = VariableOptions)
-  
+
   label121 = glabel('Categorical variables to condition on',container=group12)
   check123 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
     c('factor','logical','character')], container=group12, use.table=TRUE)
   size(check123) = c(g12width-5,round(size.height/5))
-  
+
   group13 = ggroup(horizontal = FALSE, container = group1100, expand = TRUE)
   group14 = ggroup(horizontal = TRUE, container = group13)
   size(group14) = c(min(round(0.6*size.width),size.width-g12width-20), 160)
@@ -842,7 +842,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   gframe143 = gframe(text = "Graph Type", container = group14)
   gr143 = gradio(c('Histogram/Barchart','Spinogram/Spineplot','Pairwise Plots',
                    'Parallel Coordinates','Missingness Map'), container = gframe143)
-  
+
   group144 = ggroup(horizontal = FALSE, container = group14)
   gb145 = gbutton('Summary', container = group144,
                   handler = NumSmry)
@@ -856,11 +856,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                   handler = function(h,...){
                     dispose(combo1)
                   })
-  
+
   group15 = ggroup(horizontal = FALSE, container = group13,
                    expand = TRUE, use.scrollwindow = TRUE)
   glay15 = gnotebook(container = group15, closebuttons =TRUE, expand=TRUE)
- 
+
   #####------------------------------------------------#####
   ##  In the second tab we can:                           ##
   ##  Look at the help documents.                         ##
@@ -875,16 +875,16 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   addHandlerMouseMotion(gt21, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This table displays all variables in the data set and reports the type and the percentage of missing values for each variable.\n\n   Users can sort the variables by NA's percent.\n\n   Doubleclicking one row can change the variable name, as well as the data type.\n\n   The table allows text entry to find a variable."))
 	})
-  
+
   label221 = glabel('Categorical variables to condition on',container=group22)
   check223 = gcheckboxgroup(nametable$Variables[nametable$Class %in%
-                            c('factor','logical','character')], 
+                            c('factor','logical','character')],
                             container=group22, use.table=TRUE)
   size(check223) = c(g12width-5,round(size.height/5))
   addHandlerMouseMotion(check223, handler = function(h,...){
     if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all categorical variables. We can make multiple selection on them.\n\n   Once we select one or more variables, the data set will be divided into the categories. The numeric summary and imputation will be made in each category.\n\n   If the imputation method is 'Below 10%', then the selected conditioning variables are ignored.\n\n   The list allows text entry to find a variable."))
 	})
-  
+
   group23 = ggroup(horizontal = FALSE, container = group2100,
                    expand = TRUE)
   group24 = ggroup(horizontal = TRUE, container = group23)
@@ -896,7 +896,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                     'Missing on Selected Variables', nametable[vNApct>0,2])),
                     container = group24, expand = TRUE, handler = help_colorlist)
   addHandlerMouseMotion(radio225, handler = help_colorlist)
-  
+
   gframe242 = gframe(text = "Method", container = group24)
   help_methods = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This list displays all the imputation methods.\n\n   Users can make one selection.\n\n      (1) 'Below 10%' means NA's of one variable will be replaced by the value which equals to the minimum of the variable minus 10% of the range. For categorical variables, NA's are treated as a new category. Under this status the selected conditioning variables are ignored. If the data are already imputed, then this item will show the imputed result.\n\n      (2) 'Simple' will create three tabs: Median, Mean, and Random Value. 'Median' means NA's will be replaced by the median of this variable (omit NA's). 'Mean' means NA's will be replaced by the mean of the variable (omit NA's). The median does not apply to the nominal variable, neither does the mean to the categorical variable. In these cases the mode (omit NA's) is provided. 'Random Value' means NA's will be replaced by any values of this variable (omit NA's) which are randomly selected. \n\n      (3) 'Neighbor' contains two methods: 'Average Neighbor' and 'Random Neighbor'. 'Average Neighbor' will replace the NA's by the mean of the nearest neighbors. 'Random Neighbor' substitutes the missing for a random sample of the k nearest neighbors. The number of neighbors is default to 5, and editable in the Settings tab. The nearest neighbor method requires at lease one case to be complete, at least two variables to be selected, and no factor/character variables. The ordered factors are treated as integers. The method will return the overall mean or a global random sample value if the observation only contains NA's. \n\n     For all the multiple imputation methods below, the number of imputed sets (default to be 3) and random number seed can be set in the Settings tab.\n\n      (4) 'MI:areg' uses function 'aregImpute' from package 'Hmisc'. It requires at lease one case to be complete, and at least two variables to be selected.\n\n    (5) 'MI:norm' uses function 'imp.norm' from package 'norm'. It requires all selected variables to be numeric(at least integer), and at least two variables to be selected. Sometimes it cannot converge, then the programme will leave NA's without imputation.\n\n      (6) 'MI:mice' uses the mice package. In the Settings tab, the imputing methods for all variables are displayed. Doubleclicking the variable will allow the user to change the method.\n\n    (7) 'MI:mi' employes the mi package.\n\n "))
@@ -905,7 +905,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                    'MI:norm','MI:mice','MI:mi'),
                  container = gframe242, handler = help_methods)
   addHandlerMouseMotion(gr242, handler = help_methods)
-  
+
   gframe243 = gframe(text = "Graph Type", container = group24)
   help_plottype = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   This frame shows all plots we can make.\n\n      (1)'Histogram/Barchart' will display histograms (numeric variables) and barcharts(categorical variables) for each variable selected.\n\n      (2)'Spinogram/Spineplot' shows the spineplot for each selected variable.\n\n      (3)'Pairwise Plots' will generate n*(n-1) plots if n variables are selected.\n\n       For two quantitative variables, scatterplots are in the lower matrix and contour density plots are in the upper matrix. For one categorical variable and one quantitative variable, histograms are in the lower matrix and boxplots are in the upper matrix. Two categorical variables will give a barchart.\n\n       When n>5, then only the first 5 variables are displayed. When n=2, a scatterplot is drawn for the two variables. When 2<n<=5, the function 'ggpairs' from package 'GGally' is used.\n\n      (4)'Parallel Coordinates' displays two parallel coordinates plots for the selected variables. One shows the axes in the original order, and the other in an optimized order, determined by whether the missings and non-missings can be separated well by the variable. (order='allClass' is used. See ?GGally::ggparcoord)\n\n       Whether jittered on the categorical variables can be set in the Settings tab.\n\n      (5)'Missingness Map' shows the positions of missing values in all the observations from the variable selected, regardless of the imputation. Three maps are given, and the variables and observations are sorted as the titles say."))
@@ -914,63 +914,63 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                    'Parallel Coordinates','Missingness Map'), container = gframe243,
                  handler = help_plottype)
   addHandlerMouseMotion(gr243, handler = help_plottype)
-  
+
   group244 = ggroup(horizontal = FALSE, container = group24)
   help_numeric_summary = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will create another window which presents the numeric summaries for missing values.\n\n   In this summary window, the missing percentage of all the numbers, variables, and cases are presented.\n\n   Besides, there is a table of the missing levels. The table has n+1 rows, where n = # of selected variables. For each i in 0:n, the table gives the count of cases which have i missing values, as well as the percentage of those cases.\n\n   All the summaries and tables can be conditioned on the categorical variables."))
   }
   gb245 = gbutton('Summary', container = group244, handler = help_numeric_summary)
   addHandlerMouseMotion(gb245, handler = help_numeric_summary)
-  
+
   help_plot = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will draw a plot based on the data and options the user chooses."))
   }
   gb244 = gbutton("P l o t", container = group244, handler = help_plot)
   addHandlerMouseMotion(gb244, handler = help_plot)
-  
+
   help_export = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will export the imputed data based on the other chosen options.\n\n   A window interface will pop up to let the user change some exporting options. The imputation method will be completed in the file name automatically.\n\n   The imputed data can be saved in csv or rda formats, or to a list in the R console."))
   }
   gb246 = gbutton('Export data', container = group244, handler = help_export)
   addHandlerMouseMotion(gb246, handler = help_export)
-  
+
   help_save = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will save the plot(s) to png file(s) based on the options the user chooses.\n\n   A user can define the file name for the plot, and the graph type will be suffixed automatically."))
   }
   gb248 = gbutton('Save plot', container = group244, handler = help_save)
   addHandlerMouseMotion(gb248, handler = help_save)
-  
+
   help_quit = function(h,...){
       if (exists('text25')) svalue(text25) = capture.output(cat("\n\n   Clicking this button will destroy the main window."))
   }
   gb247 = gbutton('Q u i t', container = group244, handler = help_quit)
   addHandlerMouseMotion(gb247, handler = help_quit)
-  
-  
+
+
   group25 = ggroup(horizontal = FALSE, container = group23,
                    expand = TRUE, use.scrollwindow = TRUE)
   text25 = gtext(container = group25, expand = TRUE,
                  use.scrollwindow = TRUE, font.attr=c(family="monospace"))
-  
+
   #####------------------------------------------------#####
   ##  In the third tab we can:                            ##
   ##  (1) Change the default settings of the methods.     ##
   #####------------------------------------------------#####
   group31 = ggroup(container = tab, label = "Settings", expand = TRUE, horizontal=FALSE)
   group32 = glayout(container = group31, expand = TRUE, spacing = 10)
-  
+
   group32[1,1] = ggroup(container = group32, expand = TRUE, horizontal=FALSE)
   frame342 = gframe(text = "MI:mice", container = group32[1,1], horizontal=FALSE)
-  
+
   miceSettings = data.frame(nametable[,1:3], Method=mice_default(as.character(dataclass),dataset),
                             stringsAsFactors=FALSE)
   gt3421 = gtable(miceSettings, multiple = T, container = frame342, expand = FALSE, chosencol = 2)
   size(gt3421) = c(round(0.45 * size.width), size.height-30)
   addhandlerdoubleclick(gt3421, handler = miceMethod)
-  
+
   group32[1,2] = ggroup(container = group32, expand=FALSE, horizontal=FALSE)
-  
-  frame3211 = gframe(text = "Multiple imputation", 
+
+  frame3211 = gframe(text = "Multiple imputation",
                     container = group32[1,2], horizontal=FALSE)
   group3211 = ggroup(container = frame3211)
   label32111 = glabel(text="Number of imputed sets :  ", container=group3211)
@@ -978,20 +978,20 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
   group3212 = ggroup(container = frame3211)
   label32121 = glabel(text="Random number seed :  ", container=group3212)
   text32122 = gedit(text="1234567", container=group3212, width=8, coerce.with=as.integer)
-  
+
   label321 = glabel(container = group32[1,2])
-  
-  frame3221 = gframe(text = "Neighbor:", 
+
+  frame3221 = gframe(text = "Neighbor:",
                     container = group32[1,2], horizontal=FALSE)
   group3221 = ggroup(container = frame3221)
   label32211 = glabel(text="Number of neighbors :  ", container=group3221)
   text32212 = gedit(text="5", container=group3221, width=2, coerce.with=as.integer)
-  
+
   label322 = glabel(container = group32[1,2])
-  
-  frame3231 = gframe(text = "Parallel coordinates plot", 
+
+  frame3231 = gframe(text = "Parallel coordinates plot",
                         container = group32[1,2], horizontal=FALSE)
   radio32311 = gradio(c('Jitter on categorical variables','No jitter'),container = frame3231)
-  
+
   svalue(tab)=1
 }

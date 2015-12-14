@@ -1,0 +1,26 @@
+bibentry(bibtype = "Article",
+  title        = "Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface",
+  author       = c(person(given = "Xiaoyue",
+                          family = "Cheng",
+                          email = "xycheng@unomaha.edu"),
+                   person(given = "Dianne",
+                          family = "Cook",
+                          email = "dicook@monash.edu"),
+                   person(given = "Heike",
+                          family = "Hofmann",
+                          email = "hofmann@iastate.edu")),
+  journal      = "Journal of Statistical Software",
+  year         = "2015",
+  volume       = "68",
+  number       = "6",
+  pages        = "1--23",
+  doi          = "10.18637/jss.v068.i06",
+
+  header       = "To cite MissingDataGUI in publications use:",
+  textVersion  =
+  paste("Xiaoyue Cheng, Dianne Cook, Heike Hofmann (2015).",
+        "Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface.",
+        "Journal of Statistical Software, 68(6), 1-23.",
+        "doi:10.18637/jss.v068.i06")
+)
+

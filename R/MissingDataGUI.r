@@ -28,12 +28,12 @@
 ##' selected for the main GUI.
 ##' @param data A data frame which is shown in the main missing-data
 ##' GUI. If it is null, then the open-files GUI opens.
-##' @param width the width of window. Default to be 1000, and the 
+##' @param width the width of window. Default to be 1000, and the
 ##' minimal is 800.
 ##' @param height the height of window. Default to be 750, and the
 ##' minimal is 600.
 ##' @return NULL
-##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @author Xiaoyue Cheng <\email{xycheng@@unomaha.edu}>
 ##' @export
 ##' @examples
 ##' if (interactive()) {

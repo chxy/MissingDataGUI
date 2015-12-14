@@ -72,7 +72,7 @@
 ##' keep track of the original row number and then help to find the
 ##' shadow matrix.
 ##' @export
-##' @author Xiaoyue Cheng <\email{xycheng@@iastate.edu}>
+##' @author Xiaoyue Cheng <\email{xycheng@@unomaha.edu}>
 imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition=NULL, knn=5, mi.n=3, mi.seed=1234567, row_var=NULL){
     if (is.null(origdata)) return(NULL)
     if (is.null(vartype)) vartype=unname(sapply(origdata,function(x)class(x)[1]))

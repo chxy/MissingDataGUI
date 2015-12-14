@@ -1,10 +1,10 @@
 Package: MissingDataGUI
 Type: Package
 Title: A GUI for Missing Data Exploration
-Version: 0.2-3
-Date: 2015-01-20
+Version: 0.2-4
+Date: 2015-12-13
 Author: Xiaoyue Cheng, Dianne Cook, Heike Hofmann
-Maintainer: Xiaoyue Cheng <xycheng@iastate.edu>
+Maintainer: Xiaoyue Cheng <xycheng@unomaha.edu>
 Description: Provides numeric and graphical
     summaries for the missing values from both categorical
     and quantitative variables. A variety of imputation
@@ -17,14 +17,14 @@ Depends:
     ggplot2
 Imports:
     GGally,
-    cairoDevice,
+    cairoDevice (>= 2.23),
     grid,
     reshape
 Suggests:
     Hmisc,
     norm,
     mice,
-    mi
+    mi (>= 1.0)
 License: GPL (>= 2.0)
 LazyData: true
 Collate:
