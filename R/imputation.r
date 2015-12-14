@@ -4,52 +4,52 @@
 ##' This function provides eight methods for imputation with
 ##' categorical varaibles as conditions.
 ##'
-##' The imputation methods: This list displays all the imputation 
-##' methods. Users can make one selection. (1) 'Below 10%' means 
-##' NA's of one variable will be replaced by the value which 
-##' equals to the minimum of the variable minus 10% of the range. 
-##' For categorical variables, NA's are treated as a new category. 
-##' Under this status the selected conditioning variables are 
-##' ignored. If the data are already imputed, then this item 
-##' will show the imputed result. (2) 'Simple' will create three 
-##' tabs: Median, Mean, and Random Value. 'Median' means NA's will be 
-##' replaced by the median of this variable (omit NA's). 
-##' 'Mean' means NA's will be replaced by the mean of the 
+##' The imputation methods: This list displays all the imputation
+##' methods. Users can make one selection. (1) 'Below 10%' means
+##' NA's of one variable will be replaced by the value which
+##' equals to the minimum of the variable minus 10% of the range.
+##' For categorical variables, NA's are treated as a new category.
+##' Under this status the selected conditioning variables are
+##' ignored. If the data are already imputed, then this item
+##' will show the imputed result. (2) 'Simple' will create three
+##' tabs: Median, Mean, and Random Value. 'Median' means NA's will be
+##' replaced by the median of this variable (omit NA's).
+##' 'Mean' means NA's will be replaced by the mean of the
 ##' variable (omit NA's). The median does not apply to the nominal
 ##' variable, neither does the mean to the categorical variable.
-##' In these cases the mode (omit NA's) is provided. 
-##' 'Random Value' means NA's will be replaced by any values 
-##' of this variable (omit NA's) which are randomly selected. 
-##' (3) 'Neighbor' contains two methods: 'Average Neighbor' and 
-##' 'Random Neighbor'. 'Average Neighbor' will replace the 
-##' NA's by the mean of the nearest neighbors. 'Random Neighbor' 
-##' substitutes the missing for a random sample of the k nearest 
-##' neighbors. The number of neighbors is default to 5, and 
-##' can be changed by argument knn. The Neighbor methods 
-##' require at lease one case to be complete, at least two 
-##' variables to be selected, and no factor/character variables. 
-##' The ordered factors are treated as integers. The method will 
-##' return the overall mean or a global random sample value 
+##' In these cases the mode (omit NA's) is provided.
+##' 'Random Value' means NA's will be replaced by any values
+##' of this variable (omit NA's) which are randomly selected.
+##' (3) 'Neighbor' contains two methods: 'Average Neighbor' and
+##' 'Random Neighbor'. 'Average Neighbor' will replace the
+##' NA's by the mean of the nearest neighbors. 'Random Neighbor'
+##' substitutes the missing for a random sample of the k nearest
+##' neighbors. The number of neighbors is default to 5, and
+##' can be changed by argument knn. The Neighbor methods
+##' require at lease one case to be complete, at least two
+##' variables to be selected, and no factor/character variables.
+##' The ordered factors are treated as integers. The method will
+##' return the overall mean or a global random sample value
 ##' if the observation only contains NA's.
-##' (4) 'MI:areg' uses function \code{\link[Hmisc]{aregImpute}} 
-##' from package \pkg{Hmisc}. It requires at lease one case to 
+##' (4) 'MI:areg' uses function \code{\link[Hmisc]{aregImpute}}
+##' from package \pkg{Hmisc}. It requires at lease one case to
 ##' be complete, and at least two variables to be selected.
-##' (5) 'MI:norm' uses function \code{\link[norm]{imp.norm}} 
-##' from package \pkg{norm}. It requires all selected variables 
-##' to be numeric(at least integer), and at least two variables 
-##' to be selected. Sometimes it cannot converge, then the 
+##' (5) 'MI:norm' uses function \code{\link[norm]{imp.norm}}
+##' from package \pkg{norm}. It requires all selected variables
+##' to be numeric(at least integer), and at least two variables
+##' to be selected. Sometimes it cannot converge, then the
 ##' programme will leave NA's without imputation.
-##' (6) 'MI:mice' uses the \pkg{mice} package. The methods of 
+##' (6) 'MI:mice' uses the \pkg{mice} package. The methods of
 ##' the variables containing NA's must be attached with argument
 ##' method. If not, then default methods are used.
 ##' (7) 'MI:mi' employes the \pkg{mi} package.
 ##' @param origdata A data frame whose missing values need to be
-##' imputed. This data frame should be selected from the missing 
+##' imputed. This data frame should be selected from the missing
 ##' data GUI.
-##' @param method The imputation method selected from the missing 
+##' @param method The imputation method selected from the missing
 ##' data GUI. Must be one of 'Below 10%','Simple','Neighbor',
-##' 'MI:areg','MI:norm','MI:mice','MI:mi'. If method='MI:mice', 
-##' then the methods of the variables containing NA's must be attached 
+##' 'MI:areg','MI:norm','MI:mice','MI:mi'. If method='MI:mice',
+##' then the methods of the variables containing NA's must be attached
 ##' with argument method. If not, then default methods are used.
 ##' @param vartype A vector of the classes of origdata. The length is
 ##' the same as the number of columns of origdata. The value should be
@@ -251,9 +251,9 @@ imputation = function(origdata, method, vartype=NULL, missingpct=NULL, condition
     }
     else if (method == 'MI:mi') {
       library_gui('mi')
-        f = mi::mi(origdata, seed=mi.seed)
-        dat = mi::complete(f, m = max(mi.n, 2), include_missing = FALSE)
-        names(dat)=paste('mi',1:max(mi.n, 2))
+        f = mi::mi(origdata, n.chains=mi.n, seed=mi.seed)
+        dat = mi::complete(f, include_missing = FALSE)
+        names(dat)=paste('mi',1:mi.n)
     }
     res = lapply(dat, function(x) data.frame(x, row_number=row_NO))
     return(res)
