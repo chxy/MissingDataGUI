@@ -122,8 +122,8 @@ mice_default = function(vec, dat){
 ##' @param ... not used
 ##' @return NULL
 ##' @author Barret Schloerke <\email{schloerke@@gmail.com}>, Xiaoyue Cheng <\email{xycheng@@unomaha.edu}>
-##' @import grid
 ##' @importFrom GGally getPlot
+##' @importFrom grid viewport unit grid.layout grid.newpage pushViewport grid.text gpar popViewport grid.rect
 ##' @noRd
 ##'
 winprint = function (x, ...) {

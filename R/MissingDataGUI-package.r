@@ -7,6 +7,8 @@
 ##'
 ##' @name MissingDataGUI-package
 ##' @docType package
+##' @importFrom grDevices dev.off png
+##' @importFrom stats na.omit as.formula complete.cases dist hclust median rnorm runif
 ##' @references Xiaoyue Cheng, Dianne Cook, Heike Hofmann (2015). Visually Exploring Missing Values in Multivariable Data Using a Graphical User Interface. Journal of Statistical Software, 68(6), 1-23. doi:10.18637/jss.v068.i06
 ##' @examples
 ##' if (interactive()) {

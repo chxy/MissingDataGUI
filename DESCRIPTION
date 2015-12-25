@@ -2,7 +2,7 @@ Package: MissingDataGUI
 Type: Package
 Title: A GUI for Missing Data Exploration
 Version: 0.2-4
-Date: 2015-12-13
+Date: 2015-12-25
 Author: Xiaoyue Cheng, Dianne Cook, Heike Hofmann
 Maintainer: Xiaoyue Cheng <xycheng@unomaha.edu>
 Description: Provides numeric and graphical
@@ -33,3 +33,4 @@ Collate:
     'WatchMissingValues.r'
     'imputation.r'
     'utils.r'
+RoxygenNote: 5.0.1
