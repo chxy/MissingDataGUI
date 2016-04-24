@@ -286,8 +286,11 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
               }
             }
           }
-          m$p = ggpairs(dat,columns=1:m$n,colour="Missings",alpha=I(0.5),
-                        upper=list(continuous='density',combo='box',discrete='facetbar'))
+          m$p = ggpairs(dat,columns=1:m$n,
+                        upper=list(continuous='density',
+                                   combo='box',
+                                   discrete='facetbar'),
+                        mapping = ggplot2::aes(color = Missings,alpha=0.5))
           if (.Platform$OS.type!='windows' || type=='save') {print(m$p)} else {
             winprint(m$p)
           }
