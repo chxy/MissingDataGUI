@@ -291,6 +291,13 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                                    combo='box',
                                    discrete='facetbar'),
                         mapping = ggplot2::aes(color = Missings,alpha=0.5))
+          for(pmrow in 1:m$p$nrow){
+            for(pmcol in 1:m$p$ncol){
+              m$p[pmrow,pmcol] <- m$p[pmrow,pmcol] +
+                scale_colour_discrete() +
+                scale_fill_discrete()
+            }
+          }
           if (.Platform$OS.type!='windows' || type=='save') {print(m$p)} else {
             winprint(m$p)
           }
@@ -320,7 +327,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       dat$Missing = m$Missing
       dat = dat[order(dat$Missing),]
       m$p = ggparcoord(dat,1:m$n,groupColumn='Missing',scale='uniminmax',
-                       alphaLines=0.5,...)
+                       alphaLines=0.5,...)+scale_colour_discrete()
       return(FALSE)
   }
   graph_map = function(){
