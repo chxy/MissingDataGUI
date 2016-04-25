@@ -1,4 +1,4 @@
-if(getRversion() >= '2.15.1') globalVariables(c("observation", "variable","Reordered_Observation","Missing","x1","x2","y1","y2"))
+if(getRversion() >= '2.15.1') globalVariables(c("observation", "variable","Reordered_Observation","Missing","Missings","x1","x2","y1","y2"))
 
 ## The default color palette for MissingDataGUI
 ##

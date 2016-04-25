@@ -1,3 +1,8 @@
+Changes in Version 0.2-5
+
+  - Fix the color bugs in pairwise plot and parallel coordinates plot
+  
+
 Changes in Version 0.2-4
 
   - Small changes based on the new version of package mi
