@@ -218,7 +218,7 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
       if (!(is.numeric(dat[,i]) | is.character(dat[,i]) | is.factor(dat[,i]))) return()
       tmpdat = data.frame(dat,Missing=m$Missing)
       p=qplot(tmpdat[,i],data=tmpdat,geom='histogram',fill=Missing,
-              position='stack', xlab=names(tmpdat)[i])
+              xlab=names(tmpdat)[i])
       if (is.numeric(dat[,i])) suppressMessages(print(p))
       if (is.character(dat[,i])) suppressMessages(print(p+coord_flip()))
       if (is.factor(dat[,i]) &
@@ -271,10 +271,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
           Missing=factor(m$Missing)[order(m$Missing)]
           rsltnx=ifelse(is.numeric(dat[,1]),resolution(dat[,1]),2.5)
           rsltny=ifelse(is.numeric(dat[,2]),resolution(dat[,2]),2.5)
-          print(qplot(dat[,1],dat[,2], color=Missing, geom='jitter',alpha=I(0.7),
-                      position=position_jitter(width=rsltnx/8,height=rsltny/8),
-                      size=I(3),xlab=colnames(dat)[1],ylab=colnames(dat)[2]) +
-                    theme(legend.position=legend.pos))
+          print(ggplot(dat,aes(x=dat[,1],y=dat[,2],color=Missing))+
+                  xlab(colnames(dat)[1])+ylab(colnames(dat)[2]) +
+                  geom_jitter(alpha=0.7,size=3,width=rsltnx/8,height=rsltny/8) +
+                  theme(legend.position=legend.pos))
       } else {
           dat$Missings=factor(m$Missing)[order(m$Missing)]
           if (contour == 'jitter'){
@@ -298,9 +298,10 @@ WatchMissingValues = function(h, data=NULL, gt=NULL, size.width=1000, size.heigh
                 scale_fill_discrete()
             }
           }
-          if (.Platform$OS.type!='windows' || type=='save') {print(m$p)} else {
-            winprint(m$p)
-          }
+          print(m$p)
+          # if (.Platform$OS.type!='windows' || type=='save') {print(m$p)} else {
+          #   winprint(m$p)
+          # }
       }
   }
   graph_pcp = function(j,...){
